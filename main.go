@@ -8,9 +8,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 const notesDir = "/Users/mattfinkel/.notes/"
+
+// TODO
+// - today so far
+// - week so far
+// - total hours worked
 
 func main() {
 	fmt.Println("leatherman: notes")
@@ -22,7 +28,6 @@ func main() {
 	}
 
 	for _, file := range files {
-		fmt.Println(file.Name())
 
 		f, err := os.Open(filepath.Join(notesDir, file.Name()))
 		if err != nil {
@@ -32,6 +37,8 @@ func main() {
 
 		scanner := bufio.NewScanner(f)
 		lineNumber := 0
+		var lastDate time.Time
+		var lastCategory string
 		for scanner.Scan() {
 			line := scanner.Text()
 			lineNumber += 1
@@ -40,15 +47,32 @@ func main() {
 
 				trimmed := strings.TrimPrefix(line, "## ")
 				l := strings.Split(trimmed, " (")
-				//date := l[0]
 
 				if len(l) != 2 {
-					fmt.Printf("found malformed, line %d, %s\n", lineNumber, line)
+					fmt.Printf("found malformed, %s line %d: %s\n", file.Name(), lineNumber, line)
 					continue
 				}
 
-				category := strings.TrimSuffix(l[1], ")")
-				totals[category] += 1
+				date := l[0]
+				parsedDate, err := time.Parse("2006-01-02 Mon 15:04 PM MST", date)
+				if err != nil {
+					fmt.Printf("error parsing date, %s line %d: %s\n", file.Name(), lineNumber, date)
+					continue
+				}
+
+				minutes := parsedDate.Sub(lastDate).Minutes()
+				//fmt.Printf("%+v\n", file.Name())
+				//fmt.Printf("%+v\n", parsedDate)
+				//fmt.Printf("%+v\n", lastDate)
+				if parsedDate.Day() == lastDate.Day() {
+					fmt.Printf("The minutes diffrence for category [%s] is: %+v\n", lastCategory, minutes)
+				}
+
+				lastDate = parsedDate
+				totals[lastCategory] += int(minutes)
+				lastCategory = strings.TrimSuffix(l[1], ")")
+
+				//fmt.Println("My Date Reformatted:\t", parsedDate.Format(time.RFC822))
 			}
 		}
 
@@ -57,5 +81,5 @@ func main() {
 		}
 
 	}
-	fmt.Printf("this is totals:\n%+v\n", totals)
+	fmt.Printf("totals: %+v\n", totals)
 }
