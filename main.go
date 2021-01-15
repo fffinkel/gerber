@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 )
@@ -66,12 +67,12 @@ func printTodayWork() error {
 		return err
 	}
 
-	dayTotals, _, err := getTotals(files)
+	dayTotals, _, current, err := getTotals(files)
 	if err != nil {
 		return err
 	}
 
-	printTotals(dayTotals)
+	printTotals(dayTotals, current)
 	return nil
 }
 
@@ -81,29 +82,42 @@ func minToHourMin(m int) string {
 	return fmt.Sprintf("%dh %dm", hours, minutes)
 }
 
-func printTotals(totals map[string]int) {
+func printTotals(totals map[string]int, current string) {
 	totalsString := ""
 	totalsInt := 0
-	for k, v := range totals {
-		if k != "break" {
-			hm := minToHourMin(v)
-			totalsString = totalsString + fmt.Sprintf("%s: %s\n", k, hm)
-			totalsInt += v
+
+	sorted := make([]string, 0, len(totals))
+	for k := range totals {
+		sorted = append(sorted, k)
+	}
+	sort.Strings(sorted)
+
+	for _, category := range sorted {
+		if category != "break" {
+			hm := minToHourMin(totals[category])
+			inProgress := ""
+			if category == current {
+				inProgress = "(IN PROGRESS) "
+			}
+			totalsString = totalsString + fmt.Sprintf("%s%s: %s\n", inProgress, category, hm)
+			totalsInt += totals[category]
 		}
 	}
+
 	fmt.Printf("%s", totalsString)
 	fmt.Printf("Total: %s\n", minToHourMin(totalsInt))
 }
 
-func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, error) {
+func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, string, error) {
 	dayTotals := make(map[string]int)
 	weekTotals := make(map[string]int)
+	currentCategory := ""
 
 	for _, file := range filePaths {
 
 		f, err := os.Open(filepath.Join(notesPath, file.Name()))
 		if err != nil {
-			return map[string]int{}, map[string]int{}, err
+			return map[string]int{}, map[string]int{}, currentCategory, err
 		}
 		defer f.Close()
 
@@ -147,6 +161,7 @@ func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, error) 
 		}
 
 		if lastCategory != "break" {
+			currentCategory = lastCategory
 			currentDate := time.Now()
 			minutes := currentDate.Sub(lastDate).Minutes()
 			if currentDate.Day() == lastDate.Day() && currentDate.Month() == lastDate.Month() {
@@ -159,9 +174,9 @@ func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, error) 
 		}
 
 		if err := scanner.Err(); err != nil {
-			return map[string]int{}, map[string]int{}, err
+			return map[string]int{}, map[string]int{}, "", err
 		}
 	}
 
-	return dayTotals, weekTotals, nil
+	return dayTotals, weekTotals, currentCategory, nil
 }
