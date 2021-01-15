@@ -60,69 +60,25 @@ func getTodayFilename() string {
 }
 
 func printTodayWork() error {
-	dayTotals := make(map[string]int)
-	weekTotals := make(map[string]int)
 
 	files, err := ioutil.ReadDir(notesPath)
 	if err != nil {
 		return err
 	}
 
-	for _, file := range files {
-
-		f, err := os.Open(filepath.Join(notesPath, file.Name()))
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		scanner := bufio.NewScanner(f)
-		lineNumber := 0
-		var lastDate time.Time
-		var lastCategory string
-		for scanner.Scan() {
-			line := scanner.Text()
-			lineNumber += 1
-
-			if strings.HasPrefix(line, "## ") {
-
-				trimmed := strings.TrimPrefix(line, "## ")
-				l := strings.Split(trimmed, " (")
-
-				if len(l) != 2 {
-					fmt.Printf("found malformed, %s line %d: %s\n", file.Name(), lineNumber, line)
-					continue
-				}
-
-				date := l[0]
-				parsedDate, err := time.Parse("2006-01-02 Mon 15:04 PM MST", date)
-				if err != nil {
-					fmt.Printf("error parsing date, %s line %d: %s\n", file.Name(), lineNumber, date)
-					continue
-				}
-
-				minutes := parsedDate.Sub(lastDate).Minutes()
-				if parsedDate.Day() == lastDate.Day() && parsedDate.Month() == lastDate.Month() {
-					weekTotals[lastCategory] += int(minutes)
-
-					if parsedDate.Day() == time.Now().Day() && parsedDate.Month() == time.Now().Month() {
-						dayTotals[lastCategory] += int(minutes)
-					}
-				}
-
-				lastDate = parsedDate
-				lastCategory = strings.TrimSuffix(l[1], ")")
-			}
-		}
-
-		if err := scanner.Err(); err != nil {
-			return err
-		}
-
+	dayTotals, _, err := getTotals(files)
+	if err != nil {
+		return err
 	}
 
 	printTotals(dayTotals)
 	return nil
+}
+
+func minToHourMin(m int) string {
+	minutes := m % 60
+	hours := m / 60
+	return fmt.Sprintf("%dh %dm", hours, minutes)
 }
 
 func printTotals(totals map[string]int) {
@@ -139,8 +95,73 @@ func printTotals(totals map[string]int) {
 	fmt.Printf("Total: %s\n", minToHourMin(totalsInt))
 }
 
-func minToHourMin(m int) string {
-	minutes := m % 60
-	hours := m / 60
-	return fmt.Sprintf("%dh %dm", hours, minutes)
+func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, error) {
+	dayTotals := make(map[string]int)
+	weekTotals := make(map[string]int)
+
+	for _, file := range filePaths {
+
+		f, err := os.Open(filepath.Join(notesPath, file.Name()))
+		if err != nil {
+			return map[string]int{}, map[string]int{}, err
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		lineNumber := 0
+		var lastDate time.Time
+		var lastCategory string
+		for scanner.Scan() {
+			line := scanner.Text()
+			lineNumber += 1
+
+			if strings.HasPrefix(line, "## ") {
+
+				trimmed := strings.TrimPrefix(line, "## ")
+				lineParts := strings.Split(trimmed, " (")
+
+				if len(lineParts) != 2 {
+					fmt.Printf("found malformed, %s line %d: %s\n", file.Name(), lineNumber, line)
+					continue
+				}
+
+				date := lineParts[0]
+				parsedDate, err := time.Parse("2006-01-02 Mon 15:04 PM MST", date)
+				if err != nil {
+					fmt.Printf("error parsing date, %s line %d: %s\n", file.Name(), lineNumber, date)
+					continue
+				}
+
+				minutes := parsedDate.Sub(lastDate).Minutes()
+				if parsedDate.Day() == lastDate.Day() && parsedDate.Month() == lastDate.Month() {
+					weekTotals[lastCategory] += int(minutes)
+
+					if parsedDate.Day() == time.Now().Day() && parsedDate.Month() == time.Now().Month() {
+						dayTotals[lastCategory] += int(minutes)
+					}
+				}
+
+				lastDate = parsedDate
+				lastCategory = strings.TrimSuffix(lineParts[1], ")")
+			}
+		}
+
+		if lastCategory != "break" {
+			currentDate := time.Now()
+			minutes := currentDate.Sub(lastDate).Minutes()
+			if currentDate.Day() == lastDate.Day() && currentDate.Month() == lastDate.Month() {
+				weekTotals[lastCategory] += int(minutes)
+
+				if currentDate.Day() == time.Now().Day() && currentDate.Month() == time.Now().Month() {
+					dayTotals[lastCategory] += int(minutes)
+				}
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			return map[string]int{}, map[string]int{}, err
+		}
+	}
+
+	return dayTotals, weekTotals, nil
 }
