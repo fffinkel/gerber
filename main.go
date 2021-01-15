@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -18,21 +19,46 @@ const notesDir = "/Users/mattfinkel/.notes/"
 // - week so far
 // - total hours worked
 
+type commandFunc func() error
+
+var commandMap = map[string]commandFunc{
+	"print_today": printToday,
+}
+
 func main() {
+
+	if len(os.Args) < 2 {
+		log.Fatal(errors.New("command required"))
+	}
+	commandArg := os.Args[1]
+
+	if commandFunc, ok := commandMap[commandArg]; ok {
+		err := commandFunc()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Fatal(errors.New(
+			fmt.Sprintf("command [%s] not found", commandArg)),
+		)
+	}
+}
+
+func printToday() error {
 	fmt.Println("------------------")
 	dayTotals := make(map[string]int)
 	weekTotals := make(map[string]int)
 
 	files, err := ioutil.ReadDir(notesDir)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	for _, file := range files {
 
 		f, err := os.Open(filepath.Join(notesDir, file.Name()))
 		if err != nil {
-			log.Fatal(err)
+			return err
 		}
 		defer f.Close()
 
@@ -83,7 +109,7 @@ func main() {
 		}
 
 		if err := scanner.Err(); err != nil {
-			log.Fatal(err)
+			return err
 		}
 
 	}
@@ -98,6 +124,7 @@ func main() {
 	// }
 
 	printTotals(dayTotals)
+	return nil
 }
 
 func printTotals(totals map[string]int) {
