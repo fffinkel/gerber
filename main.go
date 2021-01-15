@@ -12,17 +12,16 @@ import (
 	"time"
 )
 
-const notesDir = "/Users/mattfinkel/.notes/"
-
-// TODO
-// - today so far
-// - week so far
-// - total hours worked
+const (
+	notesPath          = "/Users/mattfinkel/.notes/"
+	notesFileExtension = ".md"
+)
 
 type commandFunc func() error
 
 var commandMap = map[string]commandFunc{
-	"print_today": printToday,
+	"print_today_work":     printTodayWork,
+	"print_today_filename": printTodayFilename,
 }
 
 func main() {
@@ -44,19 +43,34 @@ func main() {
 	}
 }
 
-func printToday() error {
-	fmt.Println("------------------")
+func printTodayFilename() error {
+	fmt.Printf(filepath.Join(notesPath, getTodayFilename()))
+	return nil
+}
+
+func getTodayFilename() string {
+	today := time.Now()
+	return fmt.Sprintf(
+		"%d%02d%02d%s",
+		today.Year(),
+		today.Month(),
+		today.Day(),
+		notesFileExtension,
+	)
+}
+
+func printTodayWork() error {
 	dayTotals := make(map[string]int)
 	weekTotals := make(map[string]int)
 
-	files, err := ioutil.ReadDir(notesDir)
+	files, err := ioutil.ReadDir(notesPath)
 	if err != nil {
 		return err
 	}
 
 	for _, file := range files {
 
-		f, err := os.Open(filepath.Join(notesDir, file.Name()))
+		f, err := os.Open(filepath.Join(notesPath, file.Name()))
 		if err != nil {
 			return err
 		}
@@ -88,12 +102,7 @@ func printToday() error {
 				}
 
 				minutes := parsedDate.Sub(lastDate).Minutes()
-				//fmt.Printf("%+v\n", file.Name())
-				//fmt.Printf("%+v\n", parsedDate)
-				//fmt.Printf("%+v\n", lastDate)
-				//fmt.Printf("%+v\n", minutes)
 				if parsedDate.Day() == lastDate.Day() && parsedDate.Month() == lastDate.Month() {
-					//fmt.Printf("The minutes diffrence for category [%s] is: %+v\n", lastCategory, minutes)
 					weekTotals[lastCategory] += int(minutes)
 
 					if parsedDate.Day() == time.Now().Day() && parsedDate.Month() == time.Now().Month() {
@@ -103,8 +112,6 @@ func printToday() error {
 
 				lastDate = parsedDate
 				lastCategory = strings.TrimSuffix(l[1], ")")
-
-				//fmt.Println("My Date Reformatted:\t", parsedDate.Format(time.RFC822))
 			}
 		}
 
@@ -113,15 +120,6 @@ func printToday() error {
 		}
 
 	}
-	//fmt.Printf("weekTotals: %+v\n", weekTotals)
-	//fmt.Printf("dayTotals: %+v\n", dayTotals)
-
-	// if lastDate.Day() == time.Now().Day() {
-	// 	now := time.Now()
-	// 	currentMinutes := now.Sub(lastDate).Minutes()
-	// 	weekTotals[lastCategory] += int(currentMinutes)
-	// 	dayTotals[lastCategory] += int(currentMinutes)
-	// }
 
 	printTotals(dayTotals)
 	return nil
@@ -139,7 +137,6 @@ func printTotals(totals map[string]int) {
 	}
 	fmt.Printf("%s", totalsString)
 	fmt.Printf("Total: %s\n", minToHourMin(totalsInt))
-	fmt.Println("------------------")
 }
 
 func minToHourMin(m int) string {
