@@ -67,12 +67,14 @@ func printTodayWork() error {
 		return err
 	}
 
-	dayTotals, _, current, err := getTotals(files)
+	dayTotals, daySuperTotals, _, current, err := getTotals(files)
 	if err != nil {
 		return err
 	}
 
-	printTotals(dayTotals, current)
+	printTotals(dayTotals, current, false, true)
+	fmt.Printf("\n")
+	printTotals(daySuperTotals, current, true, false)
 	return nil
 }
 
@@ -82,7 +84,7 @@ func minToHourMin(m int) string {
 	return fmt.Sprintf("%dh %dm", hours, minutes)
 }
 
-func printTotals(totals map[string]int, current string) {
+func printTotals(totals map[string]int, current string, printPercents, printTotals bool) {
 	totalsString := ""
 	totalsInt := 0
 
@@ -94,22 +96,37 @@ func printTotals(totals map[string]int, current string) {
 
 	for _, category := range sorted {
 		if category != "break" {
-			hm := minToHourMin(totals[category])
-			inProgress := ""
-			if category == current {
-				inProgress = "(IN PROGRESS) "
-			}
-			totalsString = totalsString + fmt.Sprintf("%s%s: %s\n", inProgress, category, hm)
 			totalsInt += totals[category]
 		}
 	}
 
+	for _, category := range sorted {
+		if category != "break" {
+			hm := minToHourMin(totals[category])
+			inProgress := ""
+			if category == current {
+				inProgress = "--> "
+			}
+			totalsString = totalsString + fmt.Sprintf("%s%s: %s", inProgress, category, hm)
+
+			if printPercents {
+				percent := (float64(totals[category]) / float64(totalsInt)) * 100
+				totalsString = totalsString + fmt.Sprintf(" (%.1f%%)", percent)
+			}
+
+			totalsString = totalsString + "\n"
+		}
+	}
+
 	fmt.Printf("%s", totalsString)
-	fmt.Printf("Total: %s\n", minToHourMin(totalsInt))
+	if printTotals {
+		fmt.Printf("Total: %s\n", minToHourMin(totalsInt))
+	}
 }
 
-func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, string, error) {
+func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, map[string]int, string, error) {
 	dayTotals := make(map[string]int)
+	daySuperTotals := make(map[string]int)
 	weekTotals := make(map[string]int)
 	currentCategory := ""
 
@@ -117,7 +134,7 @@ func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, string,
 
 		f, err := os.Open(filepath.Join(notesPath, file.Name()))
 		if err != nil {
-			return map[string]int{}, map[string]int{}, currentCategory, err
+			return map[string]int{}, map[string]int{}, map[string]int{}, currentCategory, err
 		}
 		defer f.Close()
 
@@ -125,6 +142,7 @@ func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, string,
 		lineNumber := 0
 		var lastDate time.Time
 		var lastCategory string
+		var lastSuperCategory string
 		for scanner.Scan() {
 			line := scanner.Text()
 			lineNumber += 1
@@ -152,11 +170,17 @@ func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, string,
 
 					if parsedDate.Day() == time.Now().Day() && parsedDate.Month() == time.Now().Month() {
 						dayTotals[lastCategory] += int(minutes)
+						if lastSuperCategory != "" {
+							daySuperTotals[lastSuperCategory] += int(minutes)
+						}
 					}
 				}
 
 				lastDate = parsedDate
 				lastCategory = strings.TrimSuffix(lineParts[1], ")")
+
+				splitCategory := strings.Split(lastCategory, ", ")
+				lastSuperCategory = splitCategory[0]
 			}
 		}
 
@@ -169,14 +193,17 @@ func getTotals(filePaths []os.FileInfo) (map[string]int, map[string]int, string,
 
 				if currentDate.Day() == time.Now().Day() && currentDate.Month() == time.Now().Month() {
 					dayTotals[lastCategory] += int(minutes)
+					if lastSuperCategory != "" {
+						daySuperTotals[lastSuperCategory] += int(minutes)
+					}
 				}
 			}
 		}
 
 		if err := scanner.Err(); err != nil {
-			return map[string]int{}, map[string]int{}, "", err
+			return map[string]int{}, map[string]int{}, map[string]int{}, "", err
 		}
 	}
 
-	return dayTotals, weekTotals, currentCategory, nil
+	return dayTotals, daySuperTotals, weekTotals, currentCategory, nil
 }
