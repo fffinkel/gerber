@@ -1,0 +1,6 @@
+#!/bin/sh
+
+SCRIPTPATH=$(realpath $0)
+BINPATH=$(dirname $SCRIPTPATH)
+
+go run $BINPATH/../*.go summary
