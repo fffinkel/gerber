@@ -2,9 +2,9 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -17,23 +17,11 @@ const (
 	notesExtension = ".md"
 )
 
-type commandFunc func() error
-
-var commandMap = map[string]commandFunc{
-
-	// TODO delete
-	"print_today_work": printTodayWork,
-
-	"print_today_filename": printTodayFilename,
-	"print_summary":        printSummary,
-
-	// "new_file":             createTodayFile,
-}
-
 type totals struct {
-	day   map[string]int
-	week  map[string]int
-	month map[string]int
+	day     map[string]int
+	week    map[string]int
+	month   map[string]int
+	current string
 }
 
 func newTotals() *totals {
@@ -44,22 +32,19 @@ func newTotals() *totals {
 	}
 }
 
-// func (t *totals) getFormattedDayTotal() string
-
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatal(errors.New("command required"))
 	}
-	commandArg := os.Args[1]
-
-	if commandFunc, ok := commandMap[commandArg]; ok {
-		err := commandFunc()
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
+	switch os.Args[1] {
+	case "summary":
+		t := newTotals()
+		t.calculate()
+		t.printSummary()
+		return
+	default:
 		log.Fatal(errors.New(
-			fmt.Sprintf("command [%s] not found", commandArg)),
+			fmt.Sprintf("command [%s] not found", os.Args[1])),
 		)
 	}
 }
@@ -69,12 +54,17 @@ func weekNumber(t time.Time) int {
 	return weekNum
 }
 
-func (t *totals) calculate(filePaths []os.FileInfo) error {
+func (t *totals) calculate() error {
+	files, err := ioutil.ReadDir(notesPath)
+	if err != nil {
+		return err
+	}
+
 	var lastDate time.Time
 	var lastCategory string
-	now := time.Now()
+	today := time.Now()
 
-	for _, file := range filePaths {
+	for _, file := range files {
 		f, err := os.Open(filepath.Join(notesPath, file.Name()))
 		if err != nil {
 			return err
@@ -92,7 +82,8 @@ func (t *totals) calculate(filePaths []os.FileInfo) error {
 				category, date := parseLine(line, file, lineNumber)
 
 				// if we're not in the current month, don't do anything
-				if date.Month() != now.Month() {
+				//if date.Month() != today.Month() {
+				if int(today.Sub(date).Minutes())/60/24 > 31 {
 					continue
 				}
 
@@ -108,11 +99,19 @@ func (t *totals) calculate(filePaths []os.FileInfo) error {
 					t.week = make(map[string]int)
 				}
 
+				// if this category's month doesn't match the previous line's month,
+				// reset the month count
+				if date.Month() != today.Month() {
+					t.month = make(map[string]int)
+				}
+
 				minutes := date.Sub(lastDate).Minutes()
+
+				// TODO explain the check for "break" here
 				if date.Month() == lastDate.Month() && lastCategory != "break" {
 					t.month[lastCategory] += int(minutes)
 
-					if weekNumber(date) == weekNumber(now) {
+					if weekNumber(date) == weekNumber(today) {
 						t.week[lastCategory] += int(minutes)
 
 						if date.Day() == time.Now().Day() {
@@ -130,14 +129,17 @@ func (t *totals) calculate(filePaths []os.FileInfo) error {
 
 		// include the current task
 		if lastCategory != "break" && lastCategory != "" {
-			//currentCategory = lastCategory
-			minutes := int(now.Sub(lastDate).Minutes())
+			if lastDate.Day() != today.Day() {
+
+				// TODO this error not handled
+				return errors.New("file not closed properly")
+			}
+
+			t.current = lastCategory
+			minutes := int(today.Sub(lastDate).Minutes())
 			t.day[lastCategory] += minutes
 		}
 	}
-
-	zz, _ := json.MarshalIndent(t.day, "", "\t")
-	fmt.Printf("\n\n----------> %s\n", zz)
 
 	return nil
 }
