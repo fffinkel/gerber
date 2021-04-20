@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time) {
+func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time, bool) {
 	trimmed := strings.TrimPrefix(line, "## ")
 	lineParts := strings.Split(trimmed, " (")
 
@@ -22,7 +22,14 @@ func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time
 		panic(fmt.Sprintf("error parsing date, %s line %d: %s\n", file.Name(), lineNumber, date)) // TODO no panics
 	}
 
-	return strings.TrimSuffix(lineParts[1], ")"), parsedDate
+	isSprint := false
+	category := strings.TrimSuffix(lineParts[1], ")")
+	categoryTrimmed := strings.TrimPrefix(category, "*")
+	if categoryTrimmed != category {
+		isSprint = true
+	}
+
+	return categoryTrimmed, parsedDate, isSprint
 
 	// splitCategory := strings.Split(strings.TrimSuffix(lineParts[1], ")"), ", ")
 	// if len(splitCategory) < 2 {

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -28,13 +27,26 @@ func newTotals() *totals {
 
 func (t *totals) printSummary() error {
 	fmt.Print("\n")
-	fmt.Printf("This week you have worked: %+v\n", minToHourMin(t.weekTotal()))
-	fmt.Printf("Today you have worked: %+v\n", minToHourMin(t.dayTotal()))
-	fmt.Printf("You are currently working on: \"%+v\"\n", t.current)
+	fmt.Printf("This week you have worked: %+v\n",
+		minToHourMin(t.weekTotal()))
+	fmt.Printf("Today you have worked: %+v\n",
+		minToHourMin(t.dayTotal()))
+	fmt.Printf("Current sprint percentages are: %.1f%%d, %.1f%%w\n",
+		t.daySprintPercent(), t.weekSprintPercent())
+
+	if t.current != "" {
+		fmt.Printf("You are currently working on: \"%+v\"\n", t.current)
+	} else {
+		fmt.Print("\n** You are not currently tracking any work **\n")
+	}
+
 	fmt.Print("\n")
 
 	lastTheme := ""
 	for _, category := range sortedKeys(t.day) {
+		if category == "sprint" {
+			continue
+		}
 		theme := strings.Split(category, ", ")[0]
 		if theme != lastTheme {
 			fmt.Printf("-- %s (%.1f%%d, %.1f%%w) --\n", theme,
@@ -49,7 +61,10 @@ func (t *totals) printSummary() error {
 
 func (t *totals) weekTotal() int {
 	total := 0
-	for _, v := range t.week {
+	for k, v := range t.week {
+		if k == "sprint" {
+			continue
+		}
 		total += v
 	}
 	return total
@@ -68,9 +83,16 @@ func (t *totals) weekThemePercent(theme string) float64 {
 	return (t.weekThemeTotals()[theme] / float64(t.weekTotal())) * 100
 }
 
+func (t *totals) weekSprintPercent() float64 {
+	return (float64(t.week["sprint"]) / float64(t.weekTotal())) * 100
+}
+
 func (t *totals) dayTotal() int {
 	total := 0
-	for _, v := range t.day {
+	for k, v := range t.day {
+		if k == "sprint" {
+			continue
+		}
 		total += v
 	}
 	return total
@@ -89,6 +111,10 @@ func (t *totals) dayThemePercent(theme string) float64 {
 	return (t.dayThemeTotals()[theme] / float64(t.dayTotal())) * 100
 }
 
+func (t *totals) daySprintPercent() float64 {
+	return (float64(t.day["sprint"]) / float64(t.dayTotal())) * 100
+}
+
 func (t *totals) calculate() error {
 	files, err := ioutil.ReadDir(notesPath)
 	if err != nil {
@@ -97,6 +123,7 @@ func (t *totals) calculate() error {
 
 	var lastDate time.Time
 	var lastCategory string
+	var lastIsSprint bool
 	today := time.Now()
 
 	for _, file := range files {
@@ -114,7 +141,7 @@ func (t *totals) calculate() error {
 			lineNumber += 1
 
 			if strings.HasPrefix(line, "## ") {
-				category, date := parseLine(line, file, lineNumber)
+				category, date, isSprint := parseLine(line, file, lineNumber)
 
 				// if we're not in the current month, don't do anything
 				// if date.Month() != today.Month() {
@@ -145,33 +172,51 @@ func (t *totals) calculate() error {
 				// TODO explain the check for "break" here
 				if date.Month() == lastDate.Month() && lastCategory != "break" {
 					t.month[lastCategory] += int(minutes)
+					if lastIsSprint {
+						t.month["sprint"] += int(minutes)
+					}
 
 					if weekNumber(date) == weekNumber(today) {
 						t.week[lastCategory] += int(minutes)
+						if lastIsSprint {
+							t.week["sprint"] += int(minutes)
+						}
 
 						if date.Day() == time.Now().Day() {
 							t.day[lastCategory] += int(minutes)
+							if lastIsSprint {
+								t.day["sprint"] += int(minutes)
+							}
 						}
 					}
 				}
 				lastDate = date
 				lastCategory = category
+				lastIsSprint = isSprint
 			}
 		}
 		if err := scanner.Err(); err != nil {
 			return err
 		}
 
+		// TODO why doesn't this include month
 		// include the current task
 		if lastCategory != "break" && lastCategory != "" {
-			if lastDate.Day() != today.Day() {
-				// TODO this error not handled
-				return errors.New("file not closed properly")
-			}
+
+			// this should be
+			// if lastDate.Day() != today.Day() {
+			// 	// TODO this error not handled
+			// 	return errors.New("file not closed properly")
+			// }
 
 			t.current = lastCategory
 			minutes := int(today.Sub(lastDate).Minutes())
 			t.day[lastCategory] += minutes
+			t.week[lastCategory] += minutes
+			if lastIsSprint {
+				t.day["sprint"] += minutes
+				t.week["sprint"] += minutes
+			}
 		}
 	}
 
