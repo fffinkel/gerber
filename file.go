@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,6 +40,7 @@ func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time
 	// return splitCategory[0], splitCategory[1], parsedDate
 }
 
+// TODO remove?
 func printTodayFilename() error {
 	fmt.Printf(filepath.Join(notesPath, getTodayFilename()))
 	return nil
@@ -52,20 +55,64 @@ func getTodayFilename() string {
 		notesExtension)
 }
 
-func getNotesHeader() []byte {
+func getLastFilename() (string, error) {
+	files, err := ioutil.ReadDir(notesPath)
+	if err != nil {
+		return "", err
+	}
+	lastFile := files[len(files)-1].Name()
+	if lastFile == getTodayFilename() {
+		lastFile = files[len(files)-2].Name()
+	}
+	return lastFile, nil
+}
+
+func getLastTaskList() (string, error) {
+	lastFile, err := getLastFilename()
+	if err != nil {
+		return "", err
+	}
+	f, err := os.Open(filepath.Join(notesPath, lastFile))
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	taskList := ""
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "- [ ]") {
+			taskList = taskList + "\n" + line
+		}
+		if strings.HasPrefix(line, "##") {
+			return taskList, nil
+		}
+	}
+	return "", nil
+}
+
+func getNotesHeader() ([]byte, error) {
 	today := time.Now()
 	weekday := string([]byte(today.Weekday().String())[:3])
 	kitchen := today.Format("03:04 PM")
 	zone, _ := today.Zone()
-	return []byte(fmt.Sprintf("# %s %02d, %04d (s‽)\n\nToday is a beautiful day.\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
+
+	taskList, err := getLastTaskList()
+	if err != nil {
+		return nil, err
+	}
+
+	return []byte(fmt.Sprintf("# %s %02d, %04d (s‽)\n\nToday is a beautiful day.%s\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
 		today.Month(),
 		today.Day(),
 		today.Year(),
+		taskList,
 		today.Year(),
 		today.Month(),
 		today.Day(),
 		weekday,
 		kitchen,
 		zone,
-	))
+	)), nil
 }

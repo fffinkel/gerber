@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 )
 
 const (
@@ -18,19 +19,18 @@ func main() {
 	}
 	switch os.Args[1] {
 	case "today":
-		todayFile := fmt.Sprintf("%s/%s", notesPath, getTodayFilename())
-
-		// - parse yesterday's todo list, add items not completed
-
-		file, err := os.Open(todayFile) // For read access.
+		todayFile := filepath.Join(notesPath, getTodayFilename())
+		f, err := os.Open(todayFile)
 		if errors.Is(err, os.ErrNotExist) {
-			// TODO create file, add header
-			os.WriteFile(todayFile, getNotesHeader(), 0766)
+			notesHeader, err := getNotesHeader()
+			if err != nil {
+				log.Fatal(err)
+			}
+			os.WriteFile(todayFile, notesHeader, 0766)
 		} else if err != nil {
 			log.Fatal(err)
 		}
-		file.Close()
-
+		f.Close()
 		fmt.Print(todayFile)
 		return
 	case "summary":
