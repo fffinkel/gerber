@@ -116,3 +116,38 @@ func getNotesHeader() ([]byte, error) {
 		zone,
 	)), nil
 }
+
+func searchThroughFiles(issueID string) ([]string, error) {
+	files, err := ioutil.ReadDir(notesPath)
+	if err != nil {
+		return nil, err
+	}
+	foundFiles := make(map[string]bool)
+	foundList := make([]string, 0)
+	for _, file := range files {
+		f, err := os.Open(filepath.Join(notesPath, file.Name()))
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		lineNumber := 0
+		for scanner.Scan() {
+			line := scanner.Text()
+			lineNumber += 1
+
+			if strings.HasPrefix(line, "## ") {
+				category, _, _ := parseLine(line, file, lineNumber)
+				if strings.HasSuffix(category, issueID) {
+					if foundFiles[file.Name()] {
+						continue
+					}
+					foundFiles[file.Name()] = true
+					foundList = append(foundList, file.Name())
+				}
+			}
+		}
+	}
+	return foundList, nil
+}

@@ -18,6 +18,18 @@ func main() {
 		log.Fatal(errors.New("command required"))
 	}
 	switch os.Args[1] {
+	case "links":
+		if len(os.Args) != 3 {
+			log.Fatal(errors.New("issue ID required"))
+		}
+		issueFiles, err := searchThroughFiles(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, file := range issueFiles {
+			fmt.Printf("- [%s](%s)\n", file, filepath.Join(notesPath, file))
+		}
+		return
 	case "today":
 		todayFile := filepath.Join(notesPath, getTodayFilename())
 		f, err := os.Open(todayFile)
