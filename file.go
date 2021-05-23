@@ -45,11 +45,27 @@ func printTodayFilename() error {
 
 func getTodayFilename() string {
 	today := time.Now()
-	return fmt.Sprintf(
-		"%d%02d%02d%s",
+	return fmt.Sprintf("%04d%02d%02d%s",
 		today.Year(),
 		today.Month(),
 		today.Day(),
-		notesExtension,
-	)
+		notesExtension)
+}
+
+func getNotesHeader() []byte {
+	today := time.Now()
+	weekday := string([]byte(today.Weekday().String())[:3])
+	kitchen := today.Format("03:04 PM")
+	zone, _ := today.Zone()
+	return []byte(fmt.Sprintf("# %s %02d, %04d (s‽)\n\nToday is a beautiful day.\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
+		today.Month(),
+		today.Day(),
+		today.Year(),
+		today.Year(),
+		today.Month(),
+		today.Day(),
+		weekday,
+		kitchen,
+		zone,
+	))
 }
