@@ -38,6 +38,14 @@ func main() {
 		t.calculate()
 		t.printSummary()
 		return
+	case "report":
+		if len(os.Args) != 3 {
+			log.Fatal(errors.New("sprint name required"))
+		}
+		st := newSprintTotals()
+		st.calculate(os.Args[2])
+		st.printSummary()
+		return
 	default:
 		log.Fatal(errors.New("command not found: " + os.Args[1]))
 	}
