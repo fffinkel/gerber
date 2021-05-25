@@ -27,7 +27,10 @@ func main() {
 			log.Fatal(err)
 		}
 		for _, file := range issueFiles {
-			fmt.Printf("- [%s](%s)\n", file, filepath.Join(notesPath, file))
+			if file == getTodayFilename() {
+				continue
+			}
+			fmt.Printf("|-> [%s](%s)\n", file, filepath.Join(notesPath, file))
 		}
 		return
 	case "today":
