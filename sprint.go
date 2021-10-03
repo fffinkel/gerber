@@ -147,7 +147,10 @@ FILE:
 			}
 
 			if strings.HasPrefix(line, "## ") {
-				category, date, isSprint := parseLine(line, file, lineNumber)
+				category, date, isSprint, err := parseLine(line, file, lineNumber)
+				if err != nil {
+					return err
+				}
 
 				minutes := date.Sub(lastDate).Minutes()
 				if lastCategory != "break" && lastCategory != "" {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -11,18 +12,18 @@ import (
 	"time"
 )
 
-func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time, bool) {
+func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time, bool, error) {
 	trimmed := strings.TrimPrefix(line, "## ")
 	lineParts := strings.Split(trimmed, " (")
 
 	if len(lineParts) != 2 {
-		panic(fmt.Sprintf("found malformed, %s line %d: %s\n", file.Name(), lineNumber, line)) // TODO no panics
+		return "", time.Time{}, false, errors.New(fmt.Sprintf("found malformed, %s line %d: %s\n", file.Name(), lineNumber, line))
 	}
 
 	date := lineParts[0]
 	parsedDate, err := time.Parse("2006-01-02 Mon 15:04 PM MST", date)
 	if err != nil {
-		panic(fmt.Sprintf("error parsing date, %s line %d: %s\n", file.Name(), lineNumber, date)) // TODO no panics
+		return "", time.Time{}, false, errors.New(fmt.Sprintf("error parsing date, %s line %d: %s\n", file.Name(), lineNumber, date))
 	}
 
 	isSprint := false
@@ -32,7 +33,7 @@ func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time
 		isSprint = true
 	}
 
-	return categoryTrimmed, parsedDate, isSprint
+	return categoryTrimmed, parsedDate, isSprint, nil
 
 	// splitCategory := strings.Split(strings.TrimSuffix(lineParts[1], ")"), ", ")
 	// if len(splitCategory) < 2 {
@@ -141,11 +142,14 @@ func searchThroughFiles(path, issueID string) ([]string, error) {
 			lineNumber += 1
 
 			if strings.HasPrefix(line, "# ") && strings.Contains(line, "????‽????‽") {
-				panic("found file with bad sprint name: " + line)
+				return nil, errors.New("found file with bad sprint name: " + line)
 			}
 
 			if strings.HasPrefix(line, "## ") {
-				category, _, _ := parseLine(line, file, lineNumber)
+				category, _, _, err := parseLine(line, file, lineNumber)
+				if err != nil {
+					return nil, err
+				}
 				if strings.HasSuffix(category, issueID) {
 					if foundFiles[file.Name()] {
 						continue

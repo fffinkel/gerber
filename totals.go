@@ -144,7 +144,10 @@ func (t *totals) calculate() error {
 			lineNumber += 1
 
 			if strings.HasPrefix(line, "## ") {
-				category, date, isSprint := parseLine(line, file, lineNumber)
+				category, date, isSprint, err := parseLine(line, file, lineNumber)
+				if err != nil {
+					return err
+				}
 
 				// if we're not in the current month, don't do anything
 				// if date.Month() != today.Month() {
