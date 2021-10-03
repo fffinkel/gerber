@@ -124,7 +124,7 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 	return files[len(files)-n:], nil
 }
 
-func searchThroughFiles(path, issueID string) ([]string, error) {
+func searchInFiles(path, issueID string) ([]string, error) {
 	files, err := getLastNFiles(path, 50)
 	if err != nil {
 		return nil, err

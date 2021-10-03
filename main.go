@@ -22,7 +22,7 @@ func main() {
 		if len(os.Args) != 3 {
 			log.Fatal(errors.New("issue ID required"))
 		}
-		issueFiles, err := searchThroughFiles(notesPath, os.Args[2])
+		issueFiles, err := searchInFiles(notesPath, os.Args[2])
 		if err != nil {
 			log.Fatal(err)
 		}
