@@ -103,7 +103,7 @@ func getNotesHeader() ([]byte, error) {
 		return nil, err
 	}
 
-	return []byte(fmt.Sprintf("# %s %02d, %04d (s‽)\n\nToday is a beautiful day.%s\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
+	return []byte(fmt.Sprintf("# %s %02d, %04d (q‽‽‽‽‽‽‽‽‽‽s‽‽‽‽‽‽‽‽‽‽)\n\nToday is a beautiful day.%s\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
 		today.Month(),
 		today.Day(),
 		today.Year(),
@@ -136,6 +136,10 @@ func searchThroughFiles(issueID string) ([]string, error) {
 		for scanner.Scan() {
 			line := scanner.Text()
 			lineNumber += 1
+
+			if strings.HasPrefix(line, "# ") && strings.Contains(line, "????‽????‽") {
+				panic("found file with bad sprint name: " + line)
+			}
 
 			if strings.HasPrefix(line, "## ") {
 				category, _, _ := parseLine(line, file, lineNumber)
