@@ -11,14 +11,16 @@ import (
 )
 
 type sprintTotals struct {
-	sprint map[string]int
-	other  map[string]int
+	notesPath string
+	sprint    map[string]int
+	other     map[string]int
 }
 
-func newSprintTotals() *sprintTotals {
+func newSprintTotals(notesPath string) *sprintTotals {
 	return &sprintTotals{
-		sprint: make(map[string]int),
-		other:  make(map[string]int),
+		notesPath: notesPath,
+		sprint:    make(map[string]int),
+		other:     make(map[string]int),
 	}
 }
 
@@ -109,7 +111,7 @@ func (st *sprintTotals) printSummary() error {
 }
 
 func (st *sprintTotals) calculate(sprintName string) error {
-	files, err := ioutil.ReadDir(notesPath)
+	files, err := ioutil.ReadDir(st.notesPath)
 	if err != nil {
 		return err
 	}
@@ -120,7 +122,7 @@ func (st *sprintTotals) calculate(sprintName string) error {
 
 FILE:
 	for _, file := range files {
-		f, err := os.Open(filepath.Join(notesPath, file.Name()))
+		f, err := os.Open(filepath.Join(st.notesPath, file.Name()))
 		if err != nil {
 			return err
 		}

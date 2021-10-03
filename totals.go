@@ -11,17 +11,19 @@ import (
 )
 
 type totals struct {
-	day     map[string]int
-	week    map[string]int
-	month   map[string]int
-	current string
+	notesPath string
+	day       map[string]int
+	week      map[string]int
+	month     map[string]int
+	current   string
 }
 
-func newTotals() *totals {
+func newTotals(notesPath string) *totals {
 	return &totals{
-		day:   make(map[string]int),
-		week:  make(map[string]int),
-		month: make(map[string]int),
+		notesPath: notesPath,
+		day:       make(map[string]int),
+		week:      make(map[string]int),
+		month:     make(map[string]int),
 	}
 }
 
@@ -116,7 +118,7 @@ func (t *totals) daySprintPercent() float64 {
 }
 
 func (t *totals) calculate() error {
-	files, err := ioutil.ReadDir(notesPath)
+	files, err := ioutil.ReadDir(t.notesPath)
 	if err != nil {
 		return err
 	}
@@ -127,7 +129,7 @@ func (t *totals) calculate() error {
 	today := time.Now()
 
 	for _, file := range files {
-		f, err := os.Open(filepath.Join(notesPath, file.Name()))
+		f, err := os.Open(filepath.Join(t.notesPath, file.Name()))
 		if err != nil {
 			return err
 		}

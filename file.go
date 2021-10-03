@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -41,8 +42,8 @@ func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time
 }
 
 // TODO remove?
-func printTodayFilename() error {
-	fmt.Printf(filepath.Join(notesPath, getTodayFilename()))
+func printTodayFilename(path string) error {
+	fmt.Printf(filepath.Join(path, getTodayFilename()))
 	return nil
 }
 
@@ -55,8 +56,8 @@ func getTodayFilename() string {
 		notesExtension)
 }
 
-func getLastFilename() (string, error) {
-	files, err := ioutil.ReadDir(notesPath)
+func getLastFilename(path string) (string, error) {
+	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return "", err
 	}
@@ -67,12 +68,12 @@ func getLastFilename() (string, error) {
 	return lastFile, nil
 }
 
-func getLastTaskList() (string, error) {
-	lastFile, err := getLastFilename()
+func getLastTaskList(path string) (string, error) {
+	lastFile, err := getLastFilename(path)
 	if err != nil {
 		return "", err
 	}
-	f, err := os.Open(filepath.Join(notesPath, lastFile))
+	f, err := os.Open(filepath.Join(path, lastFile))
 	if err != nil {
 		return "", err
 	}
@@ -92,13 +93,13 @@ func getLastTaskList() (string, error) {
 	return "", nil
 }
 
-func getNotesHeader() ([]byte, error) {
+func getNotesHeader(path string) ([]byte, error) {
 	today := time.Now()
 	weekday := string([]byte(today.Weekday().String())[:3])
 	kitchen := today.Format("03:04 PM")
 	zone, _ := today.Zone()
 
-	taskList, err := getLastTaskList()
+	taskList, err := getLastTaskList(path)
 	if err != nil {
 		return nil, err
 	}
@@ -117,15 +118,23 @@ func getNotesHeader() ([]byte, error) {
 	)), nil
 }
 
-func searchThroughFiles(issueID string) ([]string, error) {
-	files, err := ioutil.ReadDir(notesPath)
+func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	return files[len(files)-n:], nil
+}
+
+func searchThroughFiles(path, issueID string) ([]string, error) {
+	files, err := getLastNFiles(path, 50)
 	if err != nil {
 		return nil, err
 	}
 	foundFiles := make(map[string]bool)
 	foundList := make([]string, 0)
 	for _, file := range files {
-		f, err := os.Open(filepath.Join(notesPath, file.Name()))
+		f, err := os.Open(filepath.Join(path, file.Name()))
 		if err != nil {
 			return nil, err
 		}
