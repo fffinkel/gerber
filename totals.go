@@ -133,6 +133,7 @@ func (t *totals) calculate() error {
 		}
 		defer f.Close()
 
+		t.day = make(map[string]int)
 		scanner := bufio.NewScanner(f)
 		lineNumber := 0
 		for scanner.Scan() {
@@ -151,9 +152,9 @@ func (t *totals) calculate() error {
 
 				// if this category's day doesn't match the previous line's day,
 				// reset the day count
-				if date.Day() != lastDate.Day() {
-					t.day = make(map[string]int)
-				}
+				// if date.Day() != lastDate.Day() {
+				// 	t.day = make(map[string]int)
+				// }
 
 				// if this category's week doesn't match the previous line's week,
 				// reset the week count
