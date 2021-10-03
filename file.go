@@ -41,12 +41,6 @@ func parseLine(line string, file os.FileInfo, lineNumber int) (string, time.Time
 	// return splitCategory[0], splitCategory[1], parsedDate
 }
 
-// TODO remove?
-func printTodayFilename(path string) error {
-	fmt.Printf(filepath.Join(path, getTodayFilename()))
-	return nil
-}
-
 func getTodayFilename() string {
 	today := time.Now()
 	return fmt.Sprintf("%04d%02d%02d%s",
