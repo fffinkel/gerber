@@ -118,6 +118,9 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(files) <= n {
+		return files, nil
+	}
 	return files[len(files)-n:], nil
 }
 
