@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -25,40 +24,6 @@ func newTotals(notesPath string) *totals {
 		week:      make(map[string]int),
 		month:     make(map[string]int),
 	}
-}
-
-func (t *totals) printSummary() error {
-	fmt.Print("\n")
-	fmt.Printf("This week you have worked: %+v\n",
-		minToHourMin(t.weekTotal()))
-	fmt.Printf("Today you have worked: %+v\n",
-		minToHourMin(t.dayTotal()))
-	fmt.Printf("Current sprint percentages are: %.1f%%d, %.1f%%w\n",
-		t.daySprintPercent(), t.weekSprintPercent())
-
-	if t.current != "" {
-		fmt.Printf("You are currently working on: \"%+v\"\n", t.current)
-	} else {
-		fmt.Print("\n** You are not currently tracking any work **\n")
-	}
-
-	fmt.Print("\n")
-
-	lastTheme := ""
-	for _, category := range sortedKeys(t.day) {
-		if category == "sprint" {
-			continue
-		}
-		theme := strings.Split(category, ", ")[0]
-		if theme != lastTheme {
-			fmt.Printf("-- %s (%.1f%%d, %.1f%%w) --\n", theme,
-				t.dayThemePercent(theme),
-				t.weekThemePercent(theme))
-			lastTheme = theme
-		}
-		fmt.Printf("%s: %s\n", category, minToHourMin(t.day[category]))
-	}
-	return nil
 }
 
 func (t *totals) weekTotal() int {
