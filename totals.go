@@ -129,6 +129,9 @@ func (t *totals) calculate() error {
 	today := time.Now()
 
 	for _, file := range files {
+		if file.Name() == ".git" {
+			continue
+		}
 		f, err := os.Open(filepath.Join(t.notesPath, file.Name()))
 		if err != nil {
 			return err
