@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -76,38 +75,6 @@ func (st *sprintTotals) otherThemeTotals() map[string]float64 {
 
 func (st *sprintTotals) otherThemePercent(theme string) float64 {
 	return (st.otherThemeTotals()[theme] / float64(st.total())) * 100
-}
-
-func (st *sprintTotals) printSummary() error {
-
-	fmt.Print("\n")
-	fmt.Printf("This sprint you worked: %+v\n", minToHourMin(st.total()))
-	fmt.Print("\n")
-
-	fmt.Printf("Sprint work: %+v (%.1f%%)\n",
-		minToHourMin(st.sprintTotal()), st.sprintPercent())
-	sprintThemeTotals := make(map[string]int)
-	for _, category := range sortedKeys(st.sprint) {
-		theme := strings.Split(category, ", ")[0]
-		sprintThemeTotals[theme] += st.sprint[category]
-	}
-	for _, theme := range sortedKeys(sprintThemeTotals) {
-		fmt.Printf("-- %s: %s (%.1f%%)\n", theme, minToHourMin(sprintThemeTotals[theme]), st.sprintThemePercent(theme))
-	}
-
-	fmt.Print("\n")
-	fmt.Printf("Other work: %+v (%.1f%%)\n",
-		minToHourMin(st.otherTotal()), st.otherPercent())
-	otherThemeTotals := make(map[string]int)
-	for _, category := range sortedKeys(st.other) {
-		theme := strings.Split(category, ", ")[0]
-		otherThemeTotals[theme] += st.other[category]
-	}
-	for _, theme := range sortedKeys(otherThemeTotals) {
-		fmt.Printf("-- %s: %s (%.1f%%)\n", theme, minToHourMin(otherThemeTotals[theme]), st.otherThemePercent(theme))
-	}
-
-	return nil
 }
 
 func (st *sprintTotals) calculate(sprintName string) error {

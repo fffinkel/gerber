@@ -51,7 +51,7 @@ func main() {
 	case "summary":
 		t := newTotals(notesPath)
 		t.calculate()
-		t.printSummary()
+		printSummary(t)
 		return
 	case "report":
 		if len(os.Args) != 3 {
@@ -59,7 +59,7 @@ func main() {
 		}
 		st := newSprintTotals(notesPath)
 		st.calculate(os.Args[2])
-		st.printSummary()
+		printTotalsSummary(st)
 		return
 	default:
 		log.Fatal(errors.New("command not found: " + os.Args[1]))

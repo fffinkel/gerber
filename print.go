@@ -31,8 +31,7 @@ func getNotesHeader(path string) ([]byte, error) {
 	)), nil
 }
 
-// TODO this shouldn't be a struct method
-func (t *totals) printSummary() error {
+func printSummary(t *totals) error {
 	fmt.Print("\n")
 	fmt.Printf("This week you have worked: %+v\n",
 		minToHourMin(t.weekTotal()))
@@ -68,5 +67,37 @@ func (t *totals) printSummary() error {
 	} else {
 		fmt.Print("\n** You are not currently tracking any work **\n")
 	}
+	return nil
+}
+
+func printTotalsSummary(st *sprintTotals) error {
+
+	fmt.Print("\n")
+	fmt.Printf("This sprint you worked: %+v\n", minToHourMin(st.total()))
+	fmt.Print("\n")
+
+	fmt.Printf("Sprint work: %+v (%.1f%%)\n",
+		minToHourMin(st.sprintTotal()), st.sprintPercent())
+	sprintThemeTotals := make(map[string]int)
+	for _, category := range sortedKeys(st.sprint) {
+		theme := strings.Split(category, ", ")[0]
+		sprintThemeTotals[theme] += st.sprint[category]
+	}
+	for _, theme := range sortedKeys(sprintThemeTotals) {
+		fmt.Printf("-- %s: %s (%.1f%%)\n", theme, minToHourMin(sprintThemeTotals[theme]), st.sprintThemePercent(theme))
+	}
+
+	fmt.Print("\n")
+	fmt.Printf("Other work: %+v (%.1f%%)\n",
+		minToHourMin(st.otherTotal()), st.otherPercent())
+	otherThemeTotals := make(map[string]int)
+	for _, category := range sortedKeys(st.other) {
+		theme := strings.Split(category, ", ")[0]
+		otherThemeTotals[theme] += st.other[category]
+	}
+	for _, theme := range sortedKeys(otherThemeTotals) {
+		fmt.Printf("-- %s: %s (%.1f%%)\n", theme, minToHourMin(otherThemeTotals[theme]), st.otherThemePercent(theme))
+	}
+
 	return nil
 }
