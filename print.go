@@ -57,15 +57,16 @@ func printSummary(t *totals) error {
 			t.weekThemePercent(theme))
 	}
 
+	if len(themeTotals) > 0 {
+		fmt.Print("\n")
+	}
 	// fmt.Printf("Current sprint percentages are: %.1f%%d, %.1f%%w\n",
 	// 	t.daySprintPercent(), t.weekSprintPercent())
 
-	fmt.Print("\n")
-
 	if t.current != "" {
-		fmt.Printf("You are currently working on: \"%+v\"\n", t.current)
+		fmt.Printf("You are currently working on: %+v\n", t.current)
 	} else {
-		fmt.Print("\n** You are not currently tracking any work **\n")
+		fmt.Print("You are not currently tracking any work.\n")
 	}
 	return nil
 }
