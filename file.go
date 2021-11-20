@@ -110,3 +110,34 @@ func searchInFiles(path, issueID string) ([]string, error) {
 	}
 	return foundList, nil
 }
+
+func getLastNotes(path, term string) (string, error) {
+	files, err := getLastNFiles(path, 50)
+	if err != nil {
+		return "", err
+	}
+	notes := ""
+	for i := 2; i < len(files); i++ {
+		file := files[len(files)-i]
+		f, err := os.Open(filepath.Join(path, file.Name()))
+		if err != nil {
+			return "", err
+		}
+		defer f.Close()
+		scanner := bufio.NewScanner(f)
+		collectNotes := false
+		for scanner.Scan() {
+			line := scanner.Text()
+			if collectNotes {
+				if strings.HasPrefix(line, "## ") {
+					break
+				}
+				notes += line + "\n"
+			}
+			if strings.HasPrefix(line, "## ") && strings.Contains(line, term) {
+				collectNotes = true
+			}
+		}
+	}
+	return notes, nil
+}

@@ -33,6 +33,17 @@ func main() {
 			fmt.Printf("|-> [%s](%s)\n", file, filepath.Join(notesPath, file))
 		}
 		return
+	case "notes":
+		if len(os.Args) != 3 {
+			log.Fatal(errors.New("search term required"))
+		}
+		notes, err := getLastNotes(notesPath, os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		todayFile := filepath.Join(notesPath, getTodayFilename())
+		fmt.Printf("%s\n", notes, todayFile)
+		return
 	case "today":
 		todayFile := filepath.Join(notesPath, getTodayFilename())
 		f, err := os.Open(todayFile)
