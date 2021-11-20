@@ -1,6 +1,8 @@
 #!/bin/sh
 
-SCRIPTPATH=$(realpath $0)
-BINPATH=$(dirname $SCRIPTPATH)
+BINPATH=$(dirname $0)
+PKGPATH=$BINPATH/..
 
-go run $BINPATH/../*.go $@
+cd $PKGPATH
+go build $PKGPATH
+$PKGPATH/gerber $@
