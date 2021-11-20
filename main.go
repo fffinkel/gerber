@@ -52,7 +52,7 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			os.WriteFile(todayFile, notesHeader, 0766)
+			os.WriteFile(todayFile, notesHeader, 0o766)
 		} else if err != nil {
 			log.Fatal(err)
 		}
