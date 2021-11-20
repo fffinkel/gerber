@@ -17,7 +17,7 @@ func getNotesHeader(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	return []byte(fmt.Sprintf("# %s %02d, %04d (q‽‽‽‽‽‽‽‽‽‽s‽‽‽‽‽‽‽‽‽‽)\n\nToday is a beautiful day.%s\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
+	return []byte(fmt.Sprintf("# %s %02d, %04d\n\nToday is a beautiful day.%s\n\n## %04d-%02d-%02d %s %s %s (admin)\n\n\n",
 		today.Month(),
 		today.Day(),
 		today.Year(),
