@@ -97,6 +97,9 @@ func (t *totals) calculate() error {
 		if file.Name() == ".git" {
 			continue
 		}
+		if file.Name() == "2020" {
+			continue
+		}
 		f, err := os.Open(filepath.Join(t.notesPath, file.Name()))
 		if err != nil {
 			return err
