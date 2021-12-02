@@ -18,6 +18,8 @@ func main() {
 		log.Fatal(errors.New("command required"))
 	}
 	switch os.Args[1] {
+
+	// print links to notes that mention the search term
 	case "links":
 		if len(os.Args) != 3 {
 			log.Fatal(errors.New("issue ID required"))
@@ -33,6 +35,8 @@ func main() {
 			fmt.Printf("|-> [%s](%s)\n", file, filepath.Join(notesPath, file))
 		}
 		return
+
+	// find all notes for the search term
 	case "notes":
 		if len(os.Args) != 3 {
 			log.Fatal(errors.New("search term required"))
@@ -44,6 +48,8 @@ func main() {
 		todayFile := filepath.Join(notesPath, getTodayFilename())
 		fmt.Printf("%s %s\n", notes, todayFile)
 		return
+
+	// print the notes file template
 	case "today":
 		todayFile := filepath.Join(notesPath, getTodayFilename())
 		f, err := os.Open(todayFile)
@@ -59,11 +65,15 @@ func main() {
 		f.Close()
 		fmt.Print(todayFile)
 		return
+
+	// summary used in prompt
 	case "summary":
 		t := newTotals(notesPath)
 		t.calculate()
 		printSummary(t)
 		return
+
+	// sprint report
 	case "report":
 		if len(os.Args) != 3 {
 			log.Fatal(errors.New("sprint name required"))
