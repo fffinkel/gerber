@@ -42,7 +42,7 @@ func main() {
 			log.Fatal(err)
 		}
 		todayFile := filepath.Join(notesPath, getTodayFilename())
-		fmt.Printf("%s\n", notes, todayFile)
+		fmt.Printf("%s %s\n", notes, todayFile)
 		return
 	case "today":
 		todayFile := filepath.Join(notesPath, getTodayFilename())
