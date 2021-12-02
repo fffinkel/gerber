@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"errors"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -67,48 +66,6 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 		return files, nil
 	}
 	return files[len(files)-n:], nil
-}
-
-func searchInFiles(path, issueID string) ([]string, error) {
-	files, err := getLastNFiles(path, 50)
-	if err != nil {
-		return nil, err
-	}
-	foundFiles := make(map[string]bool)
-	foundList := make([]string, 0)
-	for _, file := range files {
-		f, err := os.Open(filepath.Join(path, file.Name()))
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-
-		scanner := bufio.NewScanner(f)
-		lineNumber := 0
-		for scanner.Scan() {
-			line := scanner.Text()
-			lineNumber += 1
-
-			if strings.HasPrefix(line, "# ") && strings.Contains(line, "????‽????‽") {
-				return nil, errors.New("found file with bad sprint name: " + line)
-			}
-
-			if strings.HasPrefix(line, "## ") {
-				category, _, _, err := parseLine(line, file, lineNumber)
-				if err != nil {
-					return nil, err
-				}
-				if strings.HasSuffix(category, issueID) {
-					if foundFiles[file.Name()] {
-						continue
-					}
-					foundFiles[file.Name()] = true
-					foundList = append(foundList, file.Name())
-				}
-			}
-		}
-	}
-	return foundList, nil
 }
 
 func getLastNotes(path, term string) (string, error) {

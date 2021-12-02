@@ -19,23 +19,6 @@ func main() {
 	}
 	switch os.Args[1] {
 
-	// print links to notes that mention the search term
-	case "links":
-		if len(os.Args) != 3 {
-			log.Fatal(errors.New("issue ID required"))
-		}
-		issueFiles, err := searchInFiles(notesPath, os.Args[2])
-		if err != nil {
-			log.Fatal(err)
-		}
-		for _, file := range issueFiles {
-			if file == getTodayFilename() {
-				continue
-			}
-			fmt.Printf("|-> [%s](%s)\n", file, filepath.Join(notesPath, file))
-		}
-		return
-
 	// find all notes for the search term
 	case "notes":
 		if len(os.Args) != 3 {
@@ -73,15 +56,6 @@ func main() {
 		printSummary(t)
 		return
 
-	// sprint report
-	case "report":
-		if len(os.Args) != 3 {
-			log.Fatal(errors.New("sprint name required"))
-		}
-		st := newSprintTotals(notesPath)
-		st.calculate(os.Args[2])
-		printTotalsSummary(st)
-		return
 	default:
 		log.Fatal(errors.New("command not found: " + os.Args[1]))
 	}
