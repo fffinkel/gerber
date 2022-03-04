@@ -90,7 +90,6 @@ func (t *totals) calculate() error {
 
 	var lastDate time.Time
 	var lastCategory string
-	var lastIsSprint bool
 	today := time.Now()
 
 	for _, file := range files {
@@ -98,6 +97,9 @@ func (t *totals) calculate() error {
 			continue
 		}
 		if file.Name() == "2020" {
+			continue
+		}
+		if file.Name() == "2021" {
 			continue
 		}
 		f, err := os.Open(filepath.Join(t.notesPath, file.Name()))
@@ -114,8 +116,9 @@ func (t *totals) calculate() error {
 			lineNumber += 1
 
 			if strings.HasPrefix(line, "## ") {
-				category, date, isSprint, err := parseLine(line, file, lineNumber)
+				category, date, err := parseLine(line)
 				if err != nil {
+					// TODO wrap this error with file name (file, lineNumber)
 					return err
 				}
 
@@ -148,27 +151,17 @@ func (t *totals) calculate() error {
 				// TODO explain the check for "break" here
 				if date.Month() == lastDate.Month() && lastCategory != "break" {
 					t.month[lastCategory] += int(minutes)
-					if lastIsSprint {
-						t.month["sprint"] += int(minutes)
-					}
 
 					if weekNumber(date) == weekNumber(today) {
 						t.week[lastCategory] += int(minutes)
-						if lastIsSprint {
-							t.week["sprint"] += int(minutes)
-						}
 
 						if date.Day() == time.Now().Day() {
 							t.day[lastCategory] += int(minutes)
-							if lastIsSprint {
-								t.day["sprint"] += int(minutes)
-							}
 						}
 					}
 				}
 				lastDate = date
 				lastCategory = category
-				lastIsSprint = isSprint
 			}
 		}
 		if err := scanner.Err(); err != nil {
@@ -189,10 +182,6 @@ func (t *totals) calculate() error {
 			minutes := int(today.Sub(lastDate).Minutes())
 			t.day[lastCategory] += minutes
 			t.week[lastCategory] += minutes
-			if lastIsSprint {
-				t.day["sprint"] += minutes
-				t.week["sprint"] += minutes
-			}
 		}
 	}
 
