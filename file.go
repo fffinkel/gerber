@@ -85,9 +85,14 @@ func getLastNotes(path, term string) (string, error) {
 		collectNotes := false
 		for scanner.Scan() {
 			line := scanner.Text()
+
+			// this weird backwards shit is because we have
+			// to first find the correct category line, then
+			// collect the notes until the next category line
 			if collectNotes {
 				if strings.HasPrefix(line, "## ") {
-					break
+					collectNotes = false
+					continue
 				}
 				notes += line + "\n"
 			}

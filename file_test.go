@@ -107,3 +107,36 @@ func TestGetLastNFiles(t *testing.T) {
 		t.Error("files should have length 5")
 	}
 }
+
+func TestGetLastNotes(t *testing.T) {
+	t.Parallel()
+	tempDir := t.TempDir()
+
+	err := createTestNoteFiles(tempDir)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	lastNotes, err := getLastNotes(tempDir, "CORE-6229")
+	testLastNotes := `
+
+
+- [ ] test task one
+- [ ] test task two
+- [x] test task three
+- [ ] test task four
+
+Don't forget to make sure the bucket is in the right region.
+
+Still need to make sure the bucket is public.
+
+
+Some example files that I'm using:
+infrastructure/zpan/infra-global/environments/zr-public/s3.tf
+infrastructure/terraform/modules/s3-bucket/policies/pdx-tier-access.json.tpl
+
+`
+	if lastNotes != testLastNotes {
+		t.Error("last notes should match expected last notes")
+	}
+}
