@@ -54,7 +54,7 @@ func main() {
 	case "summary":
 		t := newTotals(notesPath)
 		t.calculate(time.Now())
-		printSummary(t)
+		fmt.Print(getSummary(t))
 		return
 
 	default:

@@ -31,14 +31,15 @@ func getNotesHeader(path string) ([]byte, error) {
 	)), nil
 }
 
-func printSummary(t *totals) error {
-	fmt.Print("\n")
-	fmt.Printf("This week you have worked: %+v\n",
+// TODO make this not bullshit
+func getSummary(t *totals) string {
+	summary := "\n"
+	summary += fmt.Sprintf("This week you have worked: %+v\n",
 		minToHourMin(t.weekTotal()))
-	fmt.Printf("Today you have worked: %+v\n",
+	summary += fmt.Sprintf("Today you have worked: %+v\n",
 		minToHourMin(t.dayTotal()))
 
-	fmt.Print("\n")
+	summary += "\n"
 
 	themeTotals := make(map[string]int)
 	for _, category := range sortedKeys(t.day) {
@@ -47,7 +48,7 @@ func printSummary(t *totals) error {
 	}
 
 	for _, theme := range sortedKeys(themeTotals) {
-		fmt.Printf(" ➔ %s: %s (%.1f%%d, %.1f%%w)\n",
+		summary += fmt.Sprintf(" ➔ %s: %s (%.1f%%d, %.1f%%w)\n",
 			theme,
 			minToHourMin(themeTotals[theme]),
 			t.dayThemePercent(theme),
@@ -55,13 +56,13 @@ func printSummary(t *totals) error {
 	}
 
 	if len(themeTotals) > 0 {
-		fmt.Print("\n")
+		summary += "\n"
 	}
 
 	if t.current != "" {
-		fmt.Printf("You are currently working on: %+v\n", t.current)
+		summary += fmt.Sprintf("You are currently working on: %+v\n", t.current)
 	} else {
-		fmt.Print("You are not currently tracking any work.\n")
+		summary += "You are not currently tracking any work.\n"
 	}
-	return nil
+	return summary
 }
