@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -106,11 +105,6 @@ func TestDayThemePercent(t *testing.T) {
 func TestCalculatePathError(t *testing.T) {
 	t.Parallel()
 	totals := newTotals("does/not/exist")
-
-	// TODO DELETE
-	fmt.Printf("\n\n----------> %+v\n", "PLACEHOLDER")
-	// TODO DELETE
-
 	if err := totals.calculate(time.Now()); err == nil {
 		t.Error("calculate should have errored")
 	}
@@ -141,7 +135,6 @@ func TestCalculate(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	totals := newTotals(tempDir)
-	fmt.Printf("\n\n----------> %+v\n", totals)
 
 	// when the test files start
 	then := time.Date(2021, time.October, 5, 12, 0, 0, 0, time.UTC)
