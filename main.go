@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
@@ -52,7 +53,7 @@ func main() {
 	// summary used in prompt
 	case "summary":
 		t := newTotals(notesPath)
-		t.calculate()
+		t.calculate(time.Now())
 		printSummary(t)
 		return
 

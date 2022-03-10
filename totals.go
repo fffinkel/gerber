@@ -28,10 +28,7 @@ func newTotals(notesPath string) *totals {
 
 func (t *totals) weekTotal() int {
 	total := 0
-	for k, v := range t.week {
-		if k == "sprint" {
-			continue
-		}
+	for _, v := range t.week {
 		total += v
 	}
 	return total
@@ -50,16 +47,9 @@ func (t *totals) weekThemePercent(theme string) float64 {
 	return (t.weekThemeTotals()[theme] / float64(t.weekTotal())) * 100
 }
 
-func (t *totals) weekSprintPercent() float64 {
-	return (float64(t.week["sprint"]) / float64(t.weekTotal())) * 100
-}
-
 func (t *totals) dayTotal() int {
 	total := 0
-	for k, v := range t.day {
-		if k == "sprint" {
-			continue
-		}
+	for _, v := range t.day {
 		total += v
 	}
 	return total
@@ -78,11 +68,7 @@ func (t *totals) dayThemePercent(theme string) float64 {
 	return (t.dayThemeTotals()[theme] / float64(t.dayTotal())) * 100
 }
 
-func (t *totals) daySprintPercent() float64 {
-	return (float64(t.day["sprint"]) / float64(t.dayTotal())) * 100
-}
-
-func (t *totals) calculate() error {
+func (t *totals) calculate(today time.Time) error {
 	files, err := ioutil.ReadDir(t.notesPath)
 	if err != nil {
 		return err
@@ -90,7 +76,6 @@ func (t *totals) calculate() error {
 
 	var lastDate time.Time
 	var lastCategory string
-	today := time.Now()
 
 	for _, file := range files {
 		if file.Name() == ".git" {
