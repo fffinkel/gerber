@@ -10,25 +10,73 @@ import (
 )
 
 type totals struct {
-	notesPath string
-	day       map[string]int
-	week      map[string]int
-	month     map[string]int
-	current   string
+	notesPath   string
+	day         map[string]int
+	week        map[string]int
+	fiveWeek    map[string]int
+	fifteenWeek map[string]int
+	month       map[string]int
+	current     string
 }
 
 func newTotals(notesPath string) *totals {
 	return &totals{
-		notesPath: notesPath,
-		day:       make(map[string]int),
-		week:      make(map[string]int),
-		month:     make(map[string]int),
+		notesPath:   notesPath,
+		day:         make(map[string]int),
+		week:        make(map[string]int),
+		fiveWeek:    make(map[string]int),
+		fifteenWeek: make(map[string]int),
+		month:       make(map[string]int),
 	}
 }
 
 func (t *totals) weekTotal() int {
 	total := 0
 	for _, v := range t.week {
+		total += v
+	}
+	return total
+}
+
+func (t *totals) fiveWeekTotal() int {
+	total := 0
+	for k, v := range t.fiveWeek {
+		if k == "sprint" {
+			continue
+		}
+		total += v
+	}
+	return total
+}
+
+func (t *totals) fifteenWeekTotal() int {
+	total := 0
+	for k, v := range t.fifteenWeek {
+		if k == "sprint" {
+			continue
+		}
+		total += v
+	}
+	return total
+}
+
+func (t *totals) fiveWeekTotal() int {
+	total := 0
+	for k, v := range t.fiveWeek {
+		if k == "sprint" {
+			continue
+		}
+		total += v
+	}
+	return total
+}
+
+func (t *totals) fifteenWeekTotal() int {
+	total := 0
+	for k, v := range t.fifteenWeek {
+		if k == "sprint" {
+			continue
+		}
 		total += v
 	}
 	return total
@@ -43,8 +91,40 @@ func (t *totals) weekThemeTotals() map[string]float64 {
 	return totals
 }
 
+func (t *totals) fiveWeekThemeTotals() map[string]float64 {
+	totals := make(map[string]float64)
+	for k, _ := range t.fiveWeek {
+		theme := strings.Split(k, ", ")[0]
+		totals[theme] += float64(t.fiveWeek[k])
+	}
+	return totals
+}
+
+func (t *totals) fifteenWeekThemeTotals() map[string]float64 {
+	totals := make(map[string]float64)
+	for k, _ := range t.fifteenWeek {
+		theme := strings.Split(k, ", ")[0]
+		totals[theme] += float64(t.fifteenWeek[k])
+	}
+	return totals
+}
+
 func (t *totals) weekThemePercent(theme string) float64 {
 	return (t.weekThemeTotals()[theme] / float64(t.weekTotal())) * 100
+}
+
+func (t *totals) fiveWeekThemePercent(theme string) float64 {
+	// return 0.00
+	return (t.fiveWeekThemeTotals()[theme] / float64(t.fiveWeekTotal())) * 100
+}
+
+func (t *totals) fifteenWeekThemePercent(theme string) float64 {
+	// return 0.00
+	return (t.fifteenWeekThemeTotals()[theme] / float64(t.fifteenWeekTotal())) * 100
+}
+
+func (t *totals) weekSprintPercent() float64 {
+	return (float64(t.week["sprint"]) / float64(t.weekTotal())) * 100
 }
 
 func (t *totals) dayTotal() int {
@@ -135,7 +215,15 @@ func (t *totals) calculate(today time.Time) error {
 
 				// TODO explain the check for "break" here
 				if date.Month() == lastDate.Month() && lastCategory != "break" {
+
+					// TODO change this to five weeks
 					t.month[lastCategory] += int(minutes)
+
+					// TODO check for five weeks back here
+					// TODO check for fifteen weeks back here
+
+					// TODO check for five weeks back here
+					// TODO check for fifteen weeks back here
 
 					if weekNumber(date) == weekNumber(today) {
 						t.week[lastCategory] += int(minutes)
