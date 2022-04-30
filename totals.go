@@ -15,7 +15,6 @@ type totals struct {
 	week       map[string]int // TODO remove
 	fiveDay    map[string]int
 	fifteenDay map[string]int
-	month      map[string]int
 	current    string
 }
 
@@ -26,11 +25,9 @@ func newTotals(notesPath string) *totals {
 		week:       make(map[string]int), // TODO remove
 		fiveDay:    make(map[string]int), // TODO ‽‽
 		fifteenDay: make(map[string]int),
-		month:      make(map[string]int),
 	}
 }
 
-// TODO ‽‽
 func (t *totals) weekTotal() int {
 	total := 0
 	for _, v := range t.week {
@@ -61,15 +58,6 @@ func (t *totals) fifteenDayTotal() int {
 	return total
 }
 
-func (t *totals) weekThemeTotals() map[string]float64 {
-	totals := make(map[string]float64)
-	for k, _ := range t.week {
-		theme := strings.Split(k, ", ")[0]
-		totals[theme] += float64(t.week[k])
-	}
-	return totals
-}
-
 func (t *totals) fiveDayThemeTotals() map[string]float64 {
 	totals := make(map[string]float64)
 	for k, _ := range t.fiveDay {
@@ -88,10 +76,6 @@ func (t *totals) fifteenDayThemeTotals() map[string]float64 {
 	return totals
 }
 
-func (t *totals) weekThemePercent(theme string) float64 {
-	return (t.weekThemeTotals()[theme] / float64(t.weekTotal())) * 100
-}
-
 func (t *totals) fiveDayThemePercent(theme string) float64 {
 	// return 0.00
 	return (t.fiveDayThemeTotals()[theme] / float64(t.fiveDayTotal())) * 100
@@ -100,10 +84,6 @@ func (t *totals) fiveDayThemePercent(theme string) float64 {
 func (t *totals) fifteenDayThemePercent(theme string) float64 {
 	// return 0.00
 	return (t.fifteenDayThemeTotals()[theme] / float64(t.fifteenDayTotal())) * 100
-}
-
-func (t *totals) weekSprintPercent() float64 {
-	return (float64(t.week["sprint"]) / float64(t.weekTotal())) * 100
 }
 
 func (t *totals) dayTotal() int {
@@ -166,12 +146,6 @@ func (t *totals) calculate(today time.Time) error {
 					return err
 				}
 
-				// if we're not in the current month, don't do anything
-				// if date.Month() != today.Month() {
-				if int(today.Sub(date).Minutes())/60/24 > 31 {
-					continue
-				}
-
 				// if this category's day doesn't match the previous line's day,
 				// reset the day count
 				if date.Day() != lastDate.Day() {
@@ -191,19 +165,10 @@ func (t *totals) calculate(today time.Time) error {
 					t.week = make(map[string]int)
 				}
 
-				// if this category's month doesn't match the previous line's month,
-				// reset the month count
-				if date.Month() != today.Month() {
-					t.month = make(map[string]int)
-				}
-
 				minutes := date.Sub(lastDate).Minutes()
 
 				// TODO explain the check for "break" here
-				if date.Month() == lastDate.Month() && lastCategory != "break" {
-
-					// TODO change this to five weeks
-					t.month[lastCategory] += int(minutes)
+				if lastCategory != "break" {
 
 					// TODO this should count only working days
 					if today.Sub(date).Hours()/24 < 5 {
@@ -231,7 +196,6 @@ func (t *totals) calculate(today time.Time) error {
 			return err
 		}
 
-		// TODO why doesn't this include month
 		// include the current task
 		if lastCategory != "break" && lastCategory != "" {
 

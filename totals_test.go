@@ -40,12 +40,6 @@ func newTestTotals() totals {
 			"cat3, one": 9,
 			"cat3, two": 100,
 		},
-		month: map[string]int{
-			"cat1": 10,
-			"cat2": 20,
-			"cat3": 30,
-			"cat4": 40,
-		},
 		current: "something fun",
 	}
 }
@@ -95,29 +89,6 @@ func TestWeekTotal(t *testing.T) {
 	totals := newTestTotals()
 	if totals.weekTotal() != 118 {
 		t.Error("week total is incorrect")
-	}
-}
-
-func TestWeekThemeTotals(t *testing.T) {
-	t.Parallel()
-	totals := newTestTotals()
-	wtt := totals.weekThemeTotals()
-	if wtt["cat2"] != 6 {
-		t.Error("week theme totals cat2 is incorrect")
-	}
-	if wtt["cat3"] != 109 {
-		t.Error("week theme totals cat3 is incorrect")
-	}
-}
-
-func TestWeekThemePercent(t *testing.T) {
-	t.Parallel()
-	totals := newTestTotals()
-	if totals.weekThemePercent("cat2") != 5.084745762711865 {
-		t.Error("week theme percent cat2 is incorrect")
-	}
-	if totals.weekThemePercent("cat3") != 92.37288135593221 {
-		t.Error("week theme percent cat3 is incorrect")
 	}
 }
 
