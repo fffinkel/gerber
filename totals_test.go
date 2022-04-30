@@ -24,6 +24,16 @@ func newTestTotals() totals {
 			"cat2, one": 8,
 			"cat2, two": 12,
 		},
+		fiveDay: map[string]int{
+			"cat1":      4,
+			"cat2, one": 16,
+			"cat2, two": 24,
+		},
+		fifteenDay: map[string]int{
+			"cat1":      4,
+			"cat2, one": 32,
+			"cat2, two": 48,
+		},
 		week: map[string]int{
 			"cat1":      3,
 			"cat2":      6,
@@ -37,6 +47,46 @@ func newTestTotals() totals {
 			"cat4": 40,
 		},
 		current: "something fun",
+	}
+}
+
+func TestFiveDayTotal(t *testing.T) {
+	t.Parallel()
+	totals := newTestTotals()
+	if totals.fiveDayTotal() != 44 {
+		t.Error("five day total is incorrect")
+	}
+}
+
+func TestFifteenDayTotal(t *testing.T) {
+	t.Parallel()
+	totals := newTestTotals()
+	if totals.fifteenDayTotal() != 84 {
+		t.Error("fifteen day total is incorrect")
+	}
+}
+
+func TestFiveDayThemeTotals(t *testing.T) {
+	t.Parallel()
+	totals := newTestTotals()
+	fivedaytt := totals.fiveDayThemeTotals()
+	if fivedaytt["cat1"] != 4 {
+		t.Error("five day theme totals cat1 is incorrect")
+	}
+	if fivedaytt["cat2"] != 40 {
+		t.Error("five day theme totals cat2 is incorrect")
+	}
+}
+
+func TestFifteenDayThemeTotals(t *testing.T) {
+	t.Parallel()
+	totals := newTestTotals()
+	fifteendaytt := totals.fifteenDayThemeTotals()
+	if fifteendaytt["cat1"] != 4 {
+		t.Error("fifteen day theme totals cat1 is incorrect")
+	}
+	if fifteendaytt["cat2"] != 80 {
+		t.Error("fifteen day theme totals cat2 is incorrect")
 	}
 }
 

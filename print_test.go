@@ -68,8 +68,8 @@ func TestGetSummary(t *testing.T) {
 This week you have worked: 1h 58m
 Today you have worked: 0h 24m
 
- ➔ cat1: 0h 4m (16.7%d, 2.5%w)
- ➔ cat2: 0h 20m (83.3%d, 5.1%w)
+ ➔ cat1: 0h 4m (16.7%, 9.1%, 4.8%)
+ ➔ cat2: 0h 20m (83.3%, 90.9%, 95.2%)
 
 You are currently working on: something fun
 `
@@ -86,8 +86,8 @@ func TestGetSummaryNoCurrent(t *testing.T) {
 This week you have worked: 1h 58m
 Today you have worked: 0h 24m
 
- ➔ cat1: 0h 4m (16.7%d, 2.5%w)
- ➔ cat2: 0h 20m (83.3%d, 5.1%w)
+ ➔ cat1: 0h 4m (16.7%, 9.1%, 4.8%)
+ ➔ cat2: 0h 20m (83.3%, 90.9%, 95.2%)
 
 You are not currently tracking any work.
 `

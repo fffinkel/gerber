@@ -53,11 +53,12 @@ func (t *totals) summaryCategories() string {
 	}
 	categories := ""
 	for _, theme := range sortedKeys(themeTotals) {
-		categories += fmt.Sprintf(" ➔ %s: %s (%.1f%%d, %.1f%%w)\n",
+		categories += fmt.Sprintf(" ➔ %s: %s (%.1f%%, %.1f%%, %.1f%%)\n",
 			theme,
 			minToHourMin(themeTotals[theme]),
 			t.dayThemePercent(theme),
-			t.weekThemePercent(theme))
+			t.fiveDayThemePercent(theme),
+			t.fifteenDayThemePercent(theme))
 	}
 	return categories
 }
