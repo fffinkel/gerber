@@ -40,7 +40,7 @@ Today you have worked: %s
 %s
 `,
 		minToHourMin(t.weekTotal()),
-		minToHourMin(t.dayTotal()),
+		minToHourMin(t.nDayTotal(1)),
 		t.summaryCategories(),
 		t.summaryFooter())
 }
@@ -56,9 +56,9 @@ func (t *totals) summaryCategories() string {
 		categories += fmt.Sprintf(" ➔ %s: %s (%.1f%%, %.1f%%, %.1f%%)\n",
 			theme,
 			minToHourMin(themeTotals[theme]),
-			t.dayThemePercent(theme),
-			t.fiveDayThemePercent(theme),
-			t.fifteenDayThemePercent(theme))
+			t.nDayThemePercent(1, theme),
+			t.nDayThemePercent(5, theme),
+			t.nDayThemePercent(15, theme))
 	}
 	return categories
 }

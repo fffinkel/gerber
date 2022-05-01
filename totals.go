@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -28,6 +29,19 @@ func newTotals(notesPath string) *totals {
 	}
 }
 
+// TODO temporary
+func (t *totals) temporaryThing(n int) map[string]int {
+	if n == 1 {
+		return t.day
+	} else if n == 5 {
+		return t.fiveDay
+	} else if n == 15 {
+		return t.fifteenDay
+	} else {
+		panic("we shouldn't be here!")
+	}
+}
+
 func (t *totals) weekTotal() int {
 	total := 0
 	for _, v := range t.week {
@@ -36,75 +50,43 @@ func (t *totals) weekTotal() int {
 	return total
 }
 
-func (t *totals) fiveDayTotal() int {
+func (t *totals) nDayTotal(n int) int {
+	// TODO temporary
+	r := t.temporaryThing(n)
 	total := 0
-	for k, v := range t.fiveDay {
-		if k == "sprint" {
-			continue
-		}
+	for _, v := range r {
 		total += v
 	}
 	return total
 }
 
-func (t *totals) fifteenDayTotal() int {
-	total := 0
-	for k, v := range t.fifteenDay {
-		if k == "sprint" {
-			continue
-		}
-		total += v
-	}
-	return total
-}
+func (t *totals) nDayThemeTotals(n int) map[string]float64 {
+	// TODO temporary
+	r := t.temporaryThing(n)
 
-func (t *totals) fiveDayThemeTotals() map[string]float64 {
 	totals := make(map[string]float64)
-	for k, _ := range t.fiveDay {
+	for k, _ := range r {
 		theme := strings.Split(k, ", ")[0]
-		totals[theme] += float64(t.fiveDay[k])
+		totals[theme] += float64(r[k])
 	}
 	return totals
 }
 
-func (t *totals) fifteenDayThemeTotals() map[string]float64 {
-	totals := make(map[string]float64)
-	for k, _ := range t.fifteenDay {
-		theme := strings.Split(k, ", ")[0]
-		totals[theme] += float64(t.fifteenDay[k])
+func (t *totals) nDayThemePercent(n int, theme string) float64 {
+	return (t.nDayThemeTotals(n)[theme] / float64(t.nDayTotal(n))) * 100
+}
+
+func shouldSkip(file fs.FileInfo) bool {
+	if file.Name() == ".git" {
+		return true
 	}
-	return totals
-}
-
-func (t *totals) fiveDayThemePercent(theme string) float64 {
-	// return 0.00
-	return (t.fiveDayThemeTotals()[theme] / float64(t.fiveDayTotal())) * 100
-}
-
-func (t *totals) fifteenDayThemePercent(theme string) float64 {
-	// return 0.00
-	return (t.fifteenDayThemeTotals()[theme] / float64(t.fifteenDayTotal())) * 100
-}
-
-func (t *totals) dayTotal() int {
-	total := 0
-	for _, v := range t.day {
-		total += v
+	if file.Name() == "2020" {
+		return true
 	}
-	return total
-}
-
-func (t *totals) dayThemeTotals() map[string]float64 {
-	totals := make(map[string]float64)
-	for k, _ := range t.day {
-		theme := strings.Split(k, ", ")[0]
-		totals[theme] += float64(t.day[k])
+	if file.Name() == "2021" {
+		return true
 	}
-	return totals
-}
-
-func (t *totals) dayThemePercent(theme string) float64 {
-	return (t.dayThemeTotals()[theme] / float64(t.dayTotal())) * 100
+	return false
 }
 
 func (t *totals) calculate(today time.Time) error {
@@ -117,13 +99,7 @@ func (t *totals) calculate(today time.Time) error {
 	var lastCategory string
 
 	for _, file := range files {
-		if file.Name() == ".git" {
-			continue
-		}
-		if file.Name() == "2020" {
-			continue
-		}
-		if file.Name() == "2021" {
+		if shouldSkip(file) {
 			continue
 		}
 		f, err := os.Open(filepath.Join(t.notesPath, file.Name()))
