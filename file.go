@@ -12,7 +12,6 @@ import (
 	"time"
 )
 
-// TODO remove
 func getTodayFilename() string {
 	today := time.Now()
 	return fmt.Sprintf("%04d%02d%02d%s",
@@ -22,25 +21,19 @@ func getTodayFilename() string {
 		notesExtension)
 }
 
-func createTodayFile(path string) error {
-	today := time.Now()
-	todayFilename := filepath.Join(path, fmt.Sprintf("%04d%02d%02d%s",
-		today.Year(),
-		today.Month(),
-		today.Day(),
-		notesExtension))
-
-	f, err := os.Open(todayFilename)
+func createNotesFile(path, name string) error {
+	filename := filepath.Join(path, getTodayFilename())
+	f, err := os.Open(filename)
+	defer f.Close()
 	if errors.Is(err, os.ErrNotExist) {
 		notesHeader, err := getNotesHeader(path)
 		if err != nil {
 			return err
 		}
-		os.WriteFile(todayFilename, notesHeader, 0o766)
+		os.WriteFile(filename, notesHeader, 0o766)
 	} else if err != nil {
 		return err
 	}
-	f.Close()
 	return nil
 }
 

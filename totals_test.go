@@ -134,7 +134,7 @@ func TestCalculatePathError(t *testing.T) {
 func TestCalculateSkipDirs(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
-	err := createTestNoteFiles(tempDir)
+	err := createTestNoteFiles(tempDir, nil)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -151,7 +151,7 @@ func TestCalculateSkipDirs(t *testing.T) {
 func TestCalculate(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
-	err := createTestNoteFiles(tempDir)
+	err := createTestNoteFiles(tempDir, nil)
 	if err != nil {
 		t.Fatal(err.Error())
 	}

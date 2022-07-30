@@ -36,7 +36,7 @@ func main() {
 
 	// get the last five filenames
 	case "recent":
-		if err := createTodayFile(notesPath); err != nil {
+		if err := createNotesFile(notesPath, getTodayFilename()); err != nil {
 			log.Fatal(err)
 		}
 		files, err := getLastNFilenames(notesPath, 5)

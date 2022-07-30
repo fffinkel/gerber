@@ -39,18 +39,28 @@ var testdata20210923md []byte
 //go:embed testdata/20210922.md
 var testdata20210922md []byte
 
-func createTestNoteFiles(dir string) error {
-	files := map[string][]byte{
-		"20211004.md": testdata20211004md,
-		"20211001.md": testdata20211001md,
-		"20210930.md": testdata20210930md,
-		"20210929.md": testdata20210929md,
-		"20210928.md": testdata20210928md,
-		"20210927.md": testdata20210927md,
-		"20210926.md": testdata20210926md,
-		"20210924.md": testdata20210924md,
-		"20210923.md": testdata20210923md,
-		"20210922.md": testdata20210922md,
+//go:embed testdata/20210916.md
+var testdata20210916md []byte
+
+//go:embed testdata/20210915.md
+var testdata20210915md []byte
+
+var testNoteFiles = map[string][]byte{
+	"20211004.md": testdata20211004md,
+	"20211001.md": testdata20211001md,
+	"20210930.md": testdata20210930md,
+	"20210929.md": testdata20210929md,
+	"20210928.md": testdata20210928md,
+	"20210927.md": testdata20210927md,
+	"20210926.md": testdata20210926md,
+	"20210924.md": testdata20210924md,
+	"20210923.md": testdata20210923md,
+	"20210922.md": testdata20210922md,
+}
+
+func createTestNoteFiles(dir string, files map[string][]byte) error {
+	if len(files) == 0 {
+		files = testNoteFiles
 	}
 	for name, contents := range files {
 		f, err := os.Create(path.Join(dir, name))
@@ -79,16 +89,29 @@ func TestGetTodayFilename(t *testing.T) {
 	}
 }
 
-func TestGetLastFilename(t *testing.T) {
+func TestCreateTodayFile(t *testing.T) {
 	t.Parallel()
+	tempDir := t.TempDir()
+	if err := createTestNoteFiles(tempDir, nil); err != nil {
+		t.Fatal(err.Error())
+	}
+	if err := createNotesFile(tempDir, "20221216.md"); err != nil {
+		t.Fatal(err.Error())
+	}
 }
 
-// TODO test for order
+func TestCreateTodayFileError(t *testing.T) {
+	t.Parallel()
+	if err := createNotesFile("/fakedir", "20221216.md"); err == nil {
+		t.Error("fake path should cause open error")
+	}
+}
+
 func TestGetLastNFiles(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 
-	err := createTestNoteFiles(tempDir)
+	err := createTestNoteFiles(tempDir, nil)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -109,11 +132,49 @@ func TestGetLastNFiles(t *testing.T) {
 	}
 }
 
+func TestGetLastNFilesOrder(t *testing.T) {
+	t.Parallel()
+	tempDir := t.TempDir()
+	err := createTestNoteFiles(tempDir, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := getLastNFiles(tempDir, 3)
+	if files[0].Name() != "20211004.md" {
+		t.Error("files in incorrect order")
+	}
+	if files[1].Name() != "20211001.md" {
+		t.Error("files in incorrect order")
+	}
+	if files[2].Name() != "20210930.md" {
+		t.Error("files in incorrect order")
+	}
+}
+
+func TestGetLastTaskList(t *testing.T) {
+	t.Parallel()
+	tempDir := t.TempDir()
+	testFiles := map[string][]byte{
+		"20210916.md": testdata20210916md,
+		"20210915.md": testdata20210915md,
+	}
+	err := createTestNoteFiles(tempDir, testFiles)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = createNotesFile(tempDir, "20221216.md"); err != nil {
+		t.Fatal(err.Error())
+	}
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestGetLastNotes(t *testing.T) {
 	t.Parallel()
 	tempDir := t.TempDir()
 
-	err := createTestNoteFiles(tempDir)
+	err := createTestNoteFiles(tempDir, nil)
 	if err != nil {
 		t.Fatal(err.Error())
 	}
@@ -139,5 +200,13 @@ infrastructure/terraform/modules/s3-bucket/policies/pdx-tier-access.json.tpl
 `
 	if lastNotes != testLastNotes {
 		t.Error("last notes should match expected last notes")
+	}
+}
+
+func TestGetLastNotesBadPath(t *testing.T) {
+	t.Parallel()
+	_, err := getLastNotes("malarky", "CORE-6229")
+	if err == nil {
+		t.Error("getlastnotes should have errored")
 	}
 }
