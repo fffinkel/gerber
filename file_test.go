@@ -95,6 +95,7 @@ func TestGetLastNFiles(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	fmt.Printf("\n\n----------> %v\n", len(files))
 	if len(files) != 2 {
 		t.Error("files should have length 2")
 	}
