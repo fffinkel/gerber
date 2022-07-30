@@ -59,11 +59,11 @@ func getLastFilename(path string) (string, error) {
 
 // TODO move this to parser
 func getLastTaskList(path string) (string, error) {
-	lastFile, err := getLastFilename(path)
+	names, err := getLastNFilenames(path, 2)
 	if err != nil {
 		return "", err
 	}
-	f, err := os.Open(filepath.Join(path, lastFile))
+	f, err := os.Open(names[1])
 	if err != nil {
 		return "", err
 	}
