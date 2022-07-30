@@ -39,17 +39,17 @@ Today you have worked: %s
 %s
 %s
 `,
-		minToHourMin(t.weekTotal()),
-		minToHourMin(t.nDayTotal(1)),
+		minToHourMin(t.weekTotalMinutes()),
+		minToHourMin(t.nDayTotalMinutes(1)),
 		t.summaryCategories(),
 		t.summaryFooter())
 }
 
 func (t *totals) summaryCategories() string {
 	themeTotals := make(map[string]int)
-	for _, category := range sortedKeys(t.day) {
+	for _, category := range sortedKeys(t.days[0]) {
 		theme := strings.Split(category, ", ")[0]
-		themeTotals[theme] += t.day[category]
+		themeTotals[theme] += t.days[0][category]
 	}
 	categories := ""
 	for _, theme := range sortedKeys(themeTotals) {

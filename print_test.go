@@ -65,11 +65,11 @@ func TestGetNotesHeaderError(t *testing.T) {
 func TestGetSummary(t *testing.T) {
 	t.Parallel()
 	testSummary := `
-This week you have worked: 1h 58m
+This week you have worked: 3h 20m
 Today you have worked: 0h 24m
 
- ➔ cat1: 0h 4m (16.7%, 9.1%, 4.8%)
- ➔ cat2: 0h 20m (83.3%, 90.9%, 95.2%)
+ ➔ cat1: 0h 4m (16.7%, 8.0%, 10.0%)
+ ➔ cat2: 0h 20m (83.3%, 30.0%, 31.8%)
 
 You are currently working on: something fun
 `
@@ -83,11 +83,11 @@ You are currently working on: something fun
 func TestGetSummaryNoCurrent(t *testing.T) {
 	t.Parallel()
 	testSummary := `
-This week you have worked: 1h 58m
+This week you have worked: 3h 20m
 Today you have worked: 0h 24m
 
- ➔ cat1: 0h 4m (16.7%, 9.1%, 4.8%)
- ➔ cat2: 0h 20m (83.3%, 90.9%, 95.2%)
+ ➔ cat1: 0h 4m (16.7%, 8.0%, 10.0%)
+ ➔ cat2: 0h 20m (83.3%, 30.0%, 31.8%)
 
 You are not currently tracking any work.
 `

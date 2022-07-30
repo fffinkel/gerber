@@ -76,27 +76,6 @@ func getLastTaskList(path string) (string, error) {
 	return "", nil
 }
 
-func getLastNFilesBroken(path string, n int) ([]fs.FileInfo, error) {
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		return nil, err
-	}
-	if len(files) <= n {
-		return files, nil
-	}
-	var lastNFiles []fs.FileInfo
-	for _, file := range files {
-		if shouldSkip(file) {
-			continue
-		}
-		lastNFiles = append(lastNFiles, file)
-		if len(lastNFiles) == n {
-			break
-		}
-	}
-	return lastNFiles, nil
-}
-
 func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
