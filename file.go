@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/fs"
 	"io/ioutil"
@@ -11,6 +12,7 @@ import (
 	"time"
 )
 
+// TODO remove
 func getTodayFilename() string {
 	today := time.Now()
 	return fmt.Sprintf("%04d%02d%02d%s",
@@ -20,6 +22,29 @@ func getTodayFilename() string {
 		notesExtension)
 }
 
+func createTodayFile(path string) error {
+	today := time.Now()
+	todayFilename := filepath.Join(path, fmt.Sprintf("%04d%02d%02d%s",
+		today.Year(),
+		today.Month(),
+		today.Day(),
+		notesExtension))
+
+	f, err := os.Open(todayFilename)
+	if errors.Is(err, os.ErrNotExist) {
+		notesHeader, err := getNotesHeader(path)
+		if err != nil {
+			return err
+		}
+		os.WriteFile(todayFilename, notesHeader, 0o766)
+	} else if err != nil {
+		return err
+	}
+	f.Close()
+	return nil
+}
+
+// TODO remove
 func getLastFilename(path string) (string, error) {
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -32,6 +57,7 @@ func getLastFilename(path string) (string, error) {
 	return lastFile, nil
 }
 
+// TODO move this to parser
 func getLastTaskList(path string) (string, error) {
 	lastFile, err := getLastFilename(path)
 	if err != nil {
@@ -65,7 +91,6 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 	if len(files) <= n {
 		return files, nil
 	}
-
 	var lastNFiles []fs.FileInfo
 	for _, file := range files {
 		if shouldSkip(file) {
@@ -77,6 +102,18 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 		}
 	}
 	return lastNFiles, nil
+}
+
+func getLastNFilenames(path string, n int) ([]string, error) {
+	var filenames []string
+	files, err := getLastNFiles(path, n)
+	if err != nil {
+		return nil, err
+	}
+	for _, file := range files {
+		filenames = append(filenames, filepath.Join(path, file.Name()))
+	}
+	return filenames, nil
 }
 
 // TODO is this defunct?
@@ -114,17 +151,4 @@ func getLastNotes(path, term string) (string, error) {
 		}
 	}
 	return notes, nil
-}
-
-func shouldSkip(file fs.FileInfo) bool {
-	if file.Name() == ".git" {
-		return true
-	}
-	if file.Name() == "2020" {
-		return true
-	}
-	if file.Name() == "2021" {
-		return true
-	}
-	return false
 }

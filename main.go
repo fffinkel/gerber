@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -33,21 +34,16 @@ func main() {
 		fmt.Printf("%s %s\n", notes, todayFile)
 		return
 
-	// print the notes file template
-	case "today":
-		todayFile := filepath.Join(notesPath, getTodayFilename())
-		f, err := os.Open(todayFile)
-		if errors.Is(err, os.ErrNotExist) {
-			notesHeader, err := getNotesHeader(notesPath)
-			if err != nil {
-				log.Fatal(err)
-			}
-			os.WriteFile(todayFile, notesHeader, 0o766)
-		} else if err != nil {
+	// get the last five filenames
+	case "recent":
+		if err := createTodayFile(notesPath); err != nil {
 			log.Fatal(err)
 		}
-		f.Close()
-		fmt.Print(todayFile)
+		files, err := getLastNFilenames(notesPath, 5)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print(strings.Join(files, " "))
 		return
 
 	// summary used in prompt

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -84,6 +85,7 @@ func (t *totals) calculate(today time.Time) error {
 	var lastDate time.Time
 	var lastCategory string
 
+	// TODO broken
 	for _, file := range files {
 		if shouldSkip(file) {
 			continue
@@ -175,4 +177,17 @@ func (t *totals) calculate(today time.Time) error {
 	}
 
 	return nil
+}
+
+func shouldSkip(file fs.FileInfo) bool {
+	if file.Name() == ".git" {
+		return true
+	}
+	if file.Name() == "2020" {
+		return true
+	}
+	if file.Name() == "2021" {
+		return true
+	}
+	return false
 }
