@@ -1,12 +1,23 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"strings"
 	"testing"
 	"time"
 )
 
+func TestNewParser(t *testing.T) {
+	t.Parallel()
+	p := newParser("blah")
+
+	if p.notesDir != "blah" {
+		t.Error("notes path is incorrect")
+	}
+}
+
+// TODO
 func NoTestParseLine(t *testing.T) {
 	t.Parallel()
 	category, parsedDate, err := parseLine(

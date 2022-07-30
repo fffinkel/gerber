@@ -65,11 +65,20 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 	if len(files) <= n {
 		return files, nil
 	}
-	return files[len(files)-n:], nil
+
+	var lastNFiles []fs.FileInfo
+	for _, file := range files {
+		if shouldSkip(file) {
+			continue
+		}
+		lastNFiles = append(lastNFiles, file)
+	}
+	return lastNFiles, nil
 }
 
+// TODO is this defunct?
 func getLastNotes(path, term string) (string, error) {
-	files, err := getLastNFiles(path, 50)
+	files, err := getLastNFiles(path, 15)
 	if err != nil {
 		return "", err
 	}
@@ -102,4 +111,17 @@ func getLastNotes(path, term string) (string, error) {
 		}
 	}
 	return notes, nil
+}
+
+func shouldSkip(file fs.FileInfo) bool {
+	if file.Name() == ".git" {
+		return true
+	}
+	if file.Name() == "2020" {
+		return true
+	}
+	if file.Name() == "2021" {
+		return true
+	}
+	return false
 }

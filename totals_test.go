@@ -44,10 +44,18 @@ func newTestTotals() totals {
 	}
 }
 
+func TestOneDayTotal(t *testing.T) {
+	t.Parallel()
+	totals := newTestTotals()
+	if totals.nDayTotal(1) != 24 {
+		t.Error("day total is incorrect")
+	}
+}
+
 func TestFiveDayTotal(t *testing.T) {
 	t.Parallel()
 	totals := newTestTotals()
-	if totals.fiveDayTotal() != 44 {
+	if totals.nDayTotal(5) != 44 {
 		t.Error("five day total is incorrect")
 	}
 }
@@ -55,15 +63,27 @@ func TestFiveDayTotal(t *testing.T) {
 func TestFifteenDayTotal(t *testing.T) {
 	t.Parallel()
 	totals := newTestTotals()
-	if totals.fifteenDayTotal() != 84 {
+	if totals.nDayTotal(15) != 84 {
 		t.Error("fifteen day total is incorrect")
+	}
+}
+
+func TestOneDayThemeTotals(t *testing.T) {
+	t.Parallel()
+	totals := newTestTotals()
+	wtt := totals.nDayThemeTotals(1)
+	if wtt["cat1"] != 4 {
+		t.Error("day theme totals cat1 is incorrect")
+	}
+	if wtt["cat2"] != 20 {
+		t.Error("day theme totals cat2 is incorrect")
 	}
 }
 
 func TestFiveDayThemeTotals(t *testing.T) {
 	t.Parallel()
 	totals := newTestTotals()
-	fivedaytt := totals.fiveDayThemeTotals()
+	fivedaytt := totals.nDayThemeTotals(5)
 	if fivedaytt["cat1"] != 4 {
 		t.Error("five day theme totals cat1 is incorrect")
 	}
@@ -75,7 +95,7 @@ func TestFiveDayThemeTotals(t *testing.T) {
 func TestFifteenDayThemeTotals(t *testing.T) {
 	t.Parallel()
 	totals := newTestTotals()
-	fifteendaytt := totals.fifteenDayThemeTotals()
+	fifteendaytt := totals.nDayThemeTotals(15)
 	if fifteendaytt["cat1"] != 4 {
 		t.Error("fifteen day theme totals cat1 is incorrect")
 	}
@@ -92,33 +112,13 @@ func TestWeekTotal(t *testing.T) {
 	}
 }
 
-func TestDayTotal(t *testing.T) {
+func TestOneDayThemePercent(t *testing.T) {
 	t.Parallel()
 	totals := newTestTotals()
-	if totals.dayTotal() != 24 {
-		t.Error("day total is incorrect")
-	}
-}
-
-func TestDayThemeTotals(t *testing.T) {
-	t.Parallel()
-	totals := newTestTotals()
-	wtt := totals.dayThemeTotals()
-	if wtt["cat1"] != 4 {
-		t.Error("day theme totals cat1 is incorrect")
-	}
-	if wtt["cat2"] != 20 {
-		t.Error("day theme totals cat2 is incorrect")
-	}
-}
-
-func TestDayThemePercent(t *testing.T) {
-	t.Parallel()
-	totals := newTestTotals()
-	if totals.dayThemePercent("cat1") != 16.666666666666664 {
+	if totals.nDayThemePercent(1, "cat1") != 16.666666666666664 {
 		t.Error("day theme percent cat1 is incorrect")
 	}
-	if totals.dayThemePercent("cat2") != 83.33333333333334 {
+	if totals.nDayThemePercent(1, "cat2") != 83.33333333333334 {
 		t.Error("day theme percent cat2 is incorrect")
 	}
 }

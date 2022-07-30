@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -74,19 +73,6 @@ func (t *totals) nDayThemeTotals(n int) map[string]float64 {
 
 func (t *totals) nDayThemePercent(n int, theme string) float64 {
 	return (t.nDayThemeTotals(n)[theme] / float64(t.nDayTotal(n))) * 100
-}
-
-func shouldSkip(file fs.FileInfo) bool {
-	if file.Name() == ".git" {
-		return true
-	}
-	if file.Name() == "2020" {
-		return true
-	}
-	if file.Name() == "2021" {
-		return true
-	}
-	return false
 }
 
 func (t *totals) calculate(today time.Time) error {
