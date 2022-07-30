@@ -47,20 +47,31 @@ Today you have worked: %s
 
 func (t *totals) summaryCategories() string {
 	themeTotals := make(map[string]int)
+
+	// first get all categories since Monday
+	for i := 0; i <= t.mondayIndex; i++ {
+		for _, category := range sortedKeys(t.days[i]) {
+			theme := strings.Split(category, ", ")[0]
+			themeTotals[theme] = 0
+		}
+	}
+
+	// this is getting the totals for the current day
 	for _, category := range sortedKeys(t.days[0]) {
 		theme := strings.Split(category, ", ")[0]
 		themeTotals[theme] += t.days[0][category]
 	}
-	categories := ""
+
+	summaryCategories := ""
 	for _, theme := range sortedKeys(themeTotals) {
-		categories += fmt.Sprintf(" ➔ %s: %s (%.1f%%, %.1f%%, %.1f%%)\n",
+		summaryCategories += fmt.Sprintf(" ➔ %s: %s (%.1f%%, %.1f%%, %.1f%%)\n",
 			theme,
 			minToHourMin(themeTotals[theme]),
 			t.nDayThemePercent(1, theme),
 			t.nDayThemePercent(5, theme),
 			t.nDayThemePercent(15, theme))
 	}
-	return categories
+	return summaryCategories
 }
 
 func (t *totals) summaryFooter() string {
