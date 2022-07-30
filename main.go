@@ -49,7 +49,10 @@ func main() {
 	// summary used in prompt
 	case "summary":
 		t := newTotals(notesPath)
-		t.calculate(time.Now())
+		err := t.calculate(time.Now())
+		if err != nil {
+			log.Fatal(err)
+		}
 		fmt.Print(getSummary(t))
 		return
 

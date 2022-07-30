@@ -7,17 +7,25 @@ import (
 	"time"
 )
 
-type parsedNote map[string]int
-
-type parser struct {
-	notesDir    string
-	parsedNotes [15]parsedNote
-	current     string
+var allowedThemes = []string{
+	"admin",
+	"code",
+	"design",
+	"extracurricular",
+	"k8s",
+	"meeting",
+	"pager",
+	"ten percent",
+	"toil",
 }
 
-// TODO should this use file/path?
-func newParser(notesDir string) *parser {
-	return &parser{notesDir: notesDir}
+func isAllowedTheme(theme string) bool {
+	for _, allowedTheme := range allowedThemes {
+		if theme == allowedTheme {
+			return true
+		}
+	}
+	return false
 }
 
 func parseLine(line string) (string, time.Time, error) {
@@ -35,24 +43,9 @@ func parseLine(line string) (string, time.Time, error) {
 	}
 
 	category := strings.TrimSuffix(lineParts[1], ")")
+	theme := strings.Split(category, ", ")[0]
+	if !isAllowedTheme(theme) && theme != "break" {
+		return "", time.Time{}, errors.New(fmt.Sprintf("error parsing data: theme '%s' not allowed", theme))
+	}
 	return category, parsedDate, nil
 }
-
-// type totals struct {
-// 	notesPath  string
-// 	day        map[string]int
-// 	week       map[string]int // TODO remove
-// 	fiveDay    map[string]int
-// 	fifteenDay map[string]int
-// 	current    string
-// }
-
-// func newTotals(notesPath string) *totals {
-// 	return &totals{
-// 		notesPath:  notesPath,
-// 		day:        make(map[string]int),
-// 		week:       make(map[string]int), // TODO remove
-// 		fiveDay:    make(map[string]int), // TODO ‽‽
-// 		fifteenDay: make(map[string]int),
-// 	}
-// }
