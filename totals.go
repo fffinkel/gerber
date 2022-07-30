@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"os"
+	"sort"
 	"strings"
 	"time"
 )
@@ -130,4 +131,26 @@ func (t *totals) calculate(today time.Time) error {
 	}
 
 	return nil
+}
+
+// sort by 15 day theme percentage
+func (t *totals) sortedKeysByThemePercentage(in map[string]int) []string {
+	var sortedThemes []string
+	for k, _ := range in {
+		sortedThemes = append(sortedThemes, k)
+	}
+	for i := 0; i < len(sortedThemes)-1; i++ {
+		for j := 0; j < len(sortedThemes)-i-1; j++ {
+			if t.nDayThemePercent(15, sortedThemes[j]) == t.nDayThemePercent(15, sortedThemes[j+1]) {
+				alph := []string{sortedThemes[j], sortedThemes[j+1]}
+				sort.Strings(alph)
+				sortedThemes[j] = alph[0]
+				sortedThemes[j+1] = alph[1]
+			}
+			if t.nDayThemePercent(15, sortedThemes[j]) < t.nDayThemePercent(15, sortedThemes[j+1]) {
+				sortedThemes[j], sortedThemes[j+1] = sortedThemes[j+1], sortedThemes[j]
+			}
+		}
+	}
+	return sortedThemes
 }
