@@ -11,17 +11,23 @@ import (
 )
 
 type totals struct {
-	notesPath  string
+	notesPath string
+	current   string
+	days      []map[string]int
+
+	// TODO remove
 	day        map[string]int
 	week       map[string]int // TODO remove
 	fiveDay    map[string]int
 	fifteenDay map[string]int
-	current    string
 }
 
 func newTotals(notesPath string) *totals {
 	return &totals{
-		notesPath:  notesPath,
+		notesPath: notesPath,
+		days:      make([]map[string]int, 15),
+
+		// TODO remove
 		day:        make(map[string]int),
 		week:       make(map[string]int), // TODO remove
 		fiveDay:    make(map[string]int), // TODO ‽‽
@@ -77,13 +83,91 @@ func (t *totals) nDayThemePercent(n int, theme string) float64 {
 }
 
 func (t *totals) calculate(today time.Time) error {
+	// TODO old
 	files, err := ioutil.ReadDir(t.notesPath)
+	if err != nil {
+		return err
+	}
+
+	// TODO new
+	filenames, err := getLastNFilenames(t.notesPath, 15)
 	if err != nil {
 		return err
 	}
 
 	var lastDate time.Time
 	var lastCategory string
+	var lastDateT time.Time
+	var category string
+
+	//////////
+	//////////
+	////////// NEW
+	//////////
+	//////////
+
+	i := 0
+	// for each file
+	for _, filename := range filenames {
+		f, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		t.days[i] = make(map[string]int)
+
+		lineNumber := 0
+		scanner := bufio.NewScanner(f)
+
+		// for each line
+		for scanner.Scan() {
+			line := scanner.Text()
+
+			// if this is a timestamp line
+			if strings.HasPrefix(line, "## ") {
+				lineNumber++
+
+				// get the category and timestamp
+				nextCategory, date, err := parseLine(line)
+				if err != nil {
+					return err
+				}
+
+				// if this is the first line, set it and move on
+				if lineNumber == 1 {
+					category = nextCategory
+					lastDateT = date
+					continue
+				}
+
+				// if the category is not "break," add its minutes
+				if category != "break" {
+					minutes := date.Sub(lastDateT).Minutes()
+					t.days[i][category] += int(minutes)
+				}
+
+				lastDateT = date
+				category = nextCategory
+			}
+		}
+
+		// if we end with a currently open task, add its minutes
+		if category != "break" {
+			minutes := int(today.Sub(lastDateT).Minutes())
+			t.days[i][category] += minutes
+			t.current = category
+		}
+
+		// TODO this needs a defer
+		f.Close()
+		i++
+
+	} // for each file
+
+	//////////
+	//////////
+	////////// OLD
+	//////////
+	//////////
 
 	// TODO broken
 	for _, file := range files {

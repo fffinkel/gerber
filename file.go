@@ -76,7 +76,7 @@ func getLastTaskList(path string) (string, error) {
 	return "", nil
 }
 
-func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
+func getLastNFilesBroken(path string, n int) ([]fs.FileInfo, error) {
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -93,6 +93,22 @@ func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
 		if len(lastNFiles) == n {
 			break
 		}
+	}
+	return lastNFiles, nil
+}
+
+func getLastNFiles(path string, n int) ([]fs.FileInfo, error) {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+	// TODO bug, this is backwards
+	if len(files) <= n {
+		return files, nil
+	}
+	var lastNFiles []fs.FileInfo
+	for i := 1; i <= n; i++ {
+		lastNFiles = append(lastNFiles, files[len(files)-i])
 	}
 	return lastNFiles, nil
 }
