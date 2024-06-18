@@ -18,9 +18,9 @@ func TestNewTotals(t *testing.T) {
 
 func newTestTotals() totals {
 	return totals{
-		mondayIndex: 4,
-		notesPath:   "doesnt/matter",
-		current:     "something fun",
+		sowIndex:  4,
+		notesPath: "doesnt/matter",
+		current:   "something fun",
 		days: []map[string]int{
 			map[string]int{
 				"cat1":      4,
@@ -189,7 +189,7 @@ func TestOneDayThemePercent(t *testing.T) {
 func TestCalculatePathError(t *testing.T) {
 	t.Parallel()
 	totals := newTotals("does/not/exist")
-	if err := totals.calculate(time.Now()); err == nil {
+	if err := totals.calculate(time.Now(), 15); err == nil {
 		t.Error("calculate should have errored")
 	}
 }
@@ -208,7 +208,7 @@ func TestCalculateSkipDirs(t *testing.T) {
 	os.Mkdir(filepath.Join(tempDir, ".git"), 0777)
 	os.Mkdir(filepath.Join(tempDir, "2020"), 0777)
 	os.Mkdir(filepath.Join(tempDir, "2021"), 0777)
-	_ = totals.calculate(time.Now())
+	_ = totals.calculate(time.Now(), 15)
 }
 
 func TestCalculate(t *testing.T) {
@@ -222,5 +222,5 @@ func TestCalculate(t *testing.T) {
 
 	// when the test files start
 	then := time.Date(2021, time.October, 5, 12, 0, 0, 0, time.UTC)
-	_ = totals.calculate(then)
+	_ = totals.calculate(then, 15)
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+
+	// "fmt"
 	"os"
 	"sort"
 	"strings"
@@ -9,23 +11,22 @@ import (
 )
 
 type totals struct {
-	mondayIndex int
-	notesPath   string
-	current     string
-	days        []map[string]int
+	sowIndex  int
+	notesPath string
+	current   string
+	days      []map[string]int
 }
 
-func newTotals(notesPath string) *totals {
+func newTotals(notesPath string, days int) *totals {
 	return &totals{
 		notesPath: notesPath,
-		days:      make([]map[string]int, 15),
+		days:      make([]map[string]int, days),
 	}
 }
 
-// TODO calculate how many days ago monday was
 func (t *totals) weekTotalMinutes() int {
 	total := 0
-	for i := 0; i <= t.mondayIndex; i++ {
+	for i := 0; i <= t.sowIndex; i++ {
 		for _, v := range t.days[i] {
 			total += v
 		}
@@ -58,25 +59,45 @@ func (t *totals) nDayThemePercent(n int, theme string) float64 {
 	return (t.nDayThemeTotalMinutes(n)[theme] / float64(t.nDayTotalMinutes(n))) * 100
 }
 
-func (t *totals) calculate(today time.Time) error {
-	filenames, err := getLastNFilenames(t.notesPath, 15)
+func (t *totals) nDayProductiveTotalMinutes(n int) int {
+	total := 0
+	for i := 0; i < n; i++ {
+		for k, _ := range t.days[i] {
+			theme := strings.Split(k, ", ")[0]
+			if isProductiveTheme(theme) {
+				total += t.days[i][k]
+			}
+		}
+	}
+	return total
+}
+
+func (t *totals) nDayProductivePercent(n int) float64 {
+	return (float64(t.nDayProductiveTotalMinutes(n)) / float64(t.nDayTotalMinutes(n))) * 100
+}
+
+func (t *totals) calculate(today time.Time, days int) error {
+
+	filenames, err := getLastNFilenames(t.notesPath, days)
 	if err != nil {
 		return err
 	}
 
-	var lastDate time.Time
-	var category string
+	var thisCategoryStart time.Time
+	var thisCategory string
 
-	i := 0
+	fileIndex := 0
+	foundSOW := false
 	// for each file
 	for _, filename := range filenames {
 		f, err := os.Open(filename)
 		if err != nil {
 			return err
 		}
-		t.days[i] = make(map[string]int)
+		defer f.Close()
 
-		lineNumber := 0
+		t.days[fileIndex] = make(map[string]int)
+		timestampLineCount := 0
 		scanner := bufio.NewScanner(f)
 
 		// for each line
@@ -85,49 +106,84 @@ func (t *totals) calculate(today time.Time) error {
 
 			// if this is a timestamp line
 			if strings.HasPrefix(line, "## ") {
-				lineNumber++
+				timestampLineCount++
 
-				// get the category and timestamp
-				nextCategory, date, err := parseLine(line)
+				// get the thisCategory and timestamp
+				category, date, err := parseLine(line)
 				if err != nil {
 					return err
 				}
 
-				// calculate which file was Monday
-				dow := string([]byte(date.Weekday().String())[:3])
-				if dow == "Mon" && t.mondayIndex == 0 {
-					t.mondayIndex = i
-				}
+				// TODO this comment
+				// set the current day of the week based on the _first_ timestamp
+				if timestampLineCount == 1 {
 
-				// if this is the first line, set it and move on
-				if lineNumber == 1 {
-					category = nextCategory
-					lastDate = date
+					// do we need to account for the case where we have not created a file
+					// yet? probably only is an issue on monday
+					// - yes!
+
+					// cases to think about
+					// - [ ] today is monday, and I have a notes file
+					// - [ ] today is monday, and I don't have a notes file
+					// - [ ] today is tuesday 12:30AM, still working from monday
+					// - [ ] today is tuesday, and I have a notes file
+					// - [ ] today is tuesday, and I don't have a notes file
+					// - [ ] today is sunday, last day of work was friday
+
+					// if this is the first file and the first file's day is monday
+					// - monday index is zero
+					// - we're done looking back
+
+					// if this is not the first file
+					// - monday index is the first one that we find (with a max search of 7)
+
+					//if fileIndex == 0 && fileDOW == "Mon" {
+
+					// just found another bug where when there is no monday file, we can't
+					// reliably look for the file to see when we started the week
+
+					// XXX works, ish!
+					// - problem: when it's monday and I haven't creted a file yet, it
+					// thinks that it's the last day that a file existed
+					if fileIndex >= 0 && !foundSOW {
+						fileDOW := string([]byte(date.Weekday().String())[:3])
+						if fileDOW == "Mon" {
+							foundSOW = true
+							t.sowIndex = fileIndex
+						}
+					}
+
+					// fmt.Printf("\n\n----------> %+v\n", t.sowIndex)
+
+					// if t.sowIndex == 0 && fileIndex < 7 && todayDOW != "Mon" && fileDOW == "Mon" {
+					// }
+
+					// set the thisCategory
+					thisCategory = category
+					thisCategoryStart = date
 					continue
 				}
 
-				// if the category is not "break," add its minutes
-				if category != "break" {
-					minutes := date.Sub(lastDate).Minutes()
-					t.days[i][category] += int(minutes)
+				// if the thisCategory is not "break," (meaning we're currently working on
+				// something) add its minutes
+				if thisCategory != "break" {
+					minutes := date.Sub(thisCategoryStart).Minutes()
+					t.days[fileIndex][thisCategory] += int(minutes)
 				}
 
-				lastDate = date
-				category = nextCategory
+				thisCategoryStart = date
+				thisCategory = category
 			}
 		}
 
 		// if we end with a currently open task, add its minutes
-		if category != "break" {
-			minutes := int(today.Sub(lastDate).Minutes())
-			t.days[i][category] += minutes
-			t.current = category
+		if thisCategory != "break" {
+			minutes := int(today.Sub(thisCategoryStart).Minutes())
+			t.days[fileIndex][thisCategory] += minutes
+			t.current = thisCategory
 		}
 
-		// TODO this needs a defer
-		defer f.Close()
-		i++
-
+		fileIndex++
 	}
 
 	return nil

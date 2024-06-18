@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -39,7 +40,7 @@ func main() {
 		if err := createNotesFile(notesPath, getTodayFilename()); err != nil {
 			log.Fatal(err)
 		}
-		files, err := getLastNFilenames(notesPath, 5)
+		files, err := getLastNFilenames(notesPath, 8)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -48,8 +49,25 @@ func main() {
 
 	// summary used in prompt
 	case "summary":
-		t := newTotals(notesPath)
-		err := t.calculate(time.Now())
+		t := newTotals(notesPath, 15)
+		err := t.calculate(time.Now(), 15)
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print(getSummary(t))
+		return
+
+	// summary used in prompt
+	case "ledger":
+		if len(os.Args) != 3 {
+			log.Fatal(errors.New("days required"))
+		}
+		days, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatal(err)
+		}
+		t := newTotals(notesPath, days)
+		err = t.calculate(time.Now(), days)
 		if err != nil {
 			log.Fatal(err)
 		}

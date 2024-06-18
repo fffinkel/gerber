@@ -30,11 +30,50 @@ func createNotesFile(path, name string) error {
 		if err != nil {
 			return err
 		}
-		os.WriteFile(filename, notesHeader, 0o766)
+		notesFooter, err := getCarryoverNotes(path)
+		if err != nil {
+			return err
+		}
+		notes := string(notesHeader) + "\n\n\n\n\n" + notesFooter
+		os.WriteFile(filename, []byte(notes), 0o766)
 	} else if err != nil {
 		return err
 	}
 	return nil
+}
+
+func getCarryoverNotes(path string) (string, error) {
+	names, err := getLastNFilenames(path, 1)
+	if err != nil {
+		return "", err
+	}
+	f, err := os.Open(names[0])
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	carryover := ""
+	start := false
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "#### ‽‽‽‽") {
+			start = true
+		}
+		if !start {
+			continue
+		}
+		if strings.HasPrefix(line, "- [x] ") {
+			continue
+		}
+		if strings.HasPrefix(line, "- [-] ") {
+			continue
+		}
+		carryover += line + "\n"
+	}
+	return carryover, nil
 }
 
 // TODO remove
@@ -106,7 +145,7 @@ func getLastNFilenames(path string, n int) ([]string, error) {
 
 // TODO is this defunct?
 func getLastNotes(path, term string) (string, error) {
-	files, err := getLastNFiles(path, 15)
+	files, err := getLastNFiles(path, 5)
 	if err != nil {
 		return "", err
 	}

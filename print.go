@@ -35,12 +35,16 @@ func getSummary(t *totals) string {
 	return fmt.Sprintf(`
 This week you have worked: %s
 Today you have worked: %s
+Productivity: %.1f%%, %.1f%%, %.1f%%
 
 %s
 %s
 `,
 		minToHourMin(t.weekTotalMinutes()),
 		minToHourMin(t.nDayTotalMinutes(1)),
+		t.nDayProductivePercent(1),
+		t.nDayProductivePercent(5),
+		t.nDayProductivePercent(15),
 		t.summaryCategories(),
 		t.summaryFooter())
 }
@@ -48,8 +52,8 @@ Today you have worked: %s
 func (t *totals) summaryCategories() string {
 	themeTotals := make(map[string]int)
 
-	// first get all categories since Monday
-	for i := 0; i <= t.mondayIndex; i++ {
+	// first get all categories since start of week
+	for i := 0; i <= t.sowIndex; i++ {
 		for _, category := range sortedKeys(t.days[i]) {
 			theme := strings.Split(category, ", ")[0]
 			themeTotals[theme] = 0
